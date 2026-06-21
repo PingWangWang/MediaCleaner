@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Info -->
+    <string name="app_name">清图大师</string>
+    <string name="app_slogan">一键去重，释放存储空间</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">首页</string>
+    <string name="nav_scan">扫描</string>
+    <string name="nav_recycle_bin">回收站</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">清图大师</string>
+    <string name="home_start_scan">开始扫描</string>
+    <string name="home_recycle_bin">回收站</string>
+    <string name="home_settings">设置</string>
+    <string name="home_last_scan">上次扫描</string>
+    <string name="home_no_scan_record">暂无扫描记录</string>
+
+    <!-- Scan Screen -->
+    <string name="scan_title">正在扫描</string>
+    <string name="scan_in_progress">正在扫描图片…</string>
+    <string name="scan_calculating">正在计算哈希值…</string>
+    <string name="scan_clustering">正在分组对比…</string>
+    <string name="scan_organizing">正在整理结果…</string>
+    <string name="scan_count">已扫描 %d 张图片</string>
+    <string name="scan_keep_foreground">请保持应用在前台运行</string>
+    <string name="scan_cancel">取消扫描</string>
+
+    <!-- Result Screen -->
+    <string name="result_title">去重结果</string>
+    <string name="result_no_duplicates">未发现重复图片</string>
+    <string name="result_no_duplicates_desc">你的相册很干净，暂时不需要清理</string>
+    <string name="result_groups_found">发现 %d 组重复图片</string>
+    <string name="result_space_savings">可释放空间：%s</string>
+    <string name="result_clean_all">一键清理</string>
+    <string name="result_images_count">%d 张图片</string>
+
+    <!-- Detail Screen -->
+    <string name="detail_title">图片详情</string>
+    <string name="detail_set_keep">设为保留</string>
+    <string name="detail_delete_selected">删除选中</string>
+    <string name="detail_selected_count">已选 %d</string>
+    <string name="detail_keep_badge">保留</string>
+
+    <!-- Recycle Bin -->
+    <string name="recycle_title">回收站</string>
+    <string name="recycle_empty">回收站为空</string>
+    <string name="recycle_empty_desc">删除的图片会在这里保留30天，过期自动清理</string>
+    <string name="recycle_clear_all">清空回收站</string>
+    <string name="recycle_restore">恢复</string>
+    <string name="recycle_delete_permanent">永久删除</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_scan">扫描设置</string>
+    <string name="settings_scan_concurrency">扫描并发数</string>
+    <string name="settings_high_precision">高精度模式</string>
+    <string name="settings_high_precision_desc">启用pHash/ORB算法提高相似识别精度（耗电增加）</string>
+    <string name="settings_clean">清理设置</string>
+    <string name="settings_auto_clear">自动清理回收站</string>
+    <string name="settings_auto_clear_desc">30天后自动清空回收站</string>
+    <string name="settings_display">显示设置</string>
+    <string name="settings_theme">主题模式</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_theme_dark">深色模式</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_zh">中文</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_notification">通知设置</string>
+    <string name="settings_notification_enable">启用通知</string>
+    <string name="settings_privacy">隐私设置</string>
+    <string name="settings_privacy_lock">锁定预览</string>
+    <string name="settings_privacy_lock_desc">查看图片详情需要验证锁屏密码</string>
+    <string name="settings_shake_feedback">摇一摇反馈</string>
+    <string name="settings_shake_feedback_desc">摇动手机快速提交反馈</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_check_update">检查更新</string>
+
+    <!-- Update Dialog -->
+    <string name="update_title">发现新版本</string>
+    <string name="update_download">下载</string>
+    <string name="update_install">安装</string>
+    <string name="update_cancel">取消</string>
+    <string name="update_force_update">强制更新</string>
+    <string name="update_downloading">正在下载…</string>
+
+    <!-- Common -->
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="restore">恢复</string>
+    <string name="loading">加载中…</string>
+    <string name="error">错误</string>
+    <string name="retry">重试</string>
+    <string name="done">完成</string>
+
+    <!-- Confirm Dialogs -->
+    <string name="confirm_delete_title">确认删除</string>
+    <string name="confirm_delete_message">确定要删除选中的 %d 张图片吗？删除后可在回收站中恢复。</string>
+    <string name="confirm_clear_recycle">确定要清空回收站吗？删除后将无法恢复。</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Update APK storage path -->
+    <files-path
+        name="updates"
+        path="updates/" />
+    <!-- Recycle bin storage path -->
+    <files-path
+        name="recycle"
+        path="recycle/" />
+</paths>
