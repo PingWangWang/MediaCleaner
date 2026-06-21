@@ -1,7 +1,7 @@
-# 安卓媒体去重工具 完整详细设计方案
+# 安卓图片去重工具 完整详细设计方案
 
-文档版本：V1\.1
-更新说明：新增跨来源媒体去重适配、百分制相似度体系、保留权重量化评分、分类型检测功能
+文档版本：V1\.2
+更新说明：移除全部视频相关功能与设计，聚焦纯图片去重能力，适配MVP单场景落地
 适用范围：安卓移动端全版本（Android 8\.0 \~ Android 14\+）
 文档定位：可直接落地的研发级详细设计，覆盖从项目创建到上线全流程
 
@@ -13,30 +13,30 @@
 
 |项|内容|说明|
 |---|---|---|
-|中文名称|清图|直观传达「清理图片/视频、去重减负」核心功能|
-|英文名称|MediaCleaner|包名与国际化使用|
-|应用包名|`com.mediacleaner.app`|标准反向域名格式，唯一标识|
+|中文名称|清图大师|直观传达「清理图片、去重减负」核心功能|
+|英文名称|PhotoCleaner|包名与国际化使用|
+|应用包名|`com.photocleaner.app`|标准反向域名格式，唯一标识|
 |应用 Slogan|一键去重，释放存储空间||
-|产品定位|纯本地、轻量、高精度的安卓媒体文件去重工具||
-|核心价值|快速识别重复图片/视频，安全删除冗余文件，零隐私泄露风险||
+|产品定位|纯本地、轻量、高精度的安卓图片文件去重工具||
+|核心价值|快速识别重复/相似图片，安全删除冗余文件，零隐私泄露风险||
 
 ### 2\. 版本规划（MVP 到 V1\.2）
 
 |版本|核心功能|工期|
 |---|---|---|
-|V1\.0 MVP|图片去重、视频去重、回收站、基础设置|6周|
+|V1\.0 MVP|图片完全重复检测、相似图片检测、回收站、基础设置|5周|
 |V1\.1|相似截图清理、模糊图片检测、微信/QQ专项扫描|2周|
-|V1\.2|大文件清理、重复音频/文档、批量导出备份|2周|
+|V1\.2|大文件清理、截图智能分类、批量导出备份|2周|
 
 ### 3\. 核心性能指标（硬性验收标准）
 
 - 冷启动时间：≤ 1\.2s（中高端机型）
 
-- 扫描速度：10000 张图片 ≤ 30s，1000 个视频 ≤ 60s
+- 扫描速度：10000 张图片 ≤ 30s
 
-- 内存峰值：扫描过程中 ≤ 250MB
+- 内存峰值：扫描过程中 ≤ 200MB
 
-- 去重准确率：完全重复 100%，相似图片 ≥ 98%，相似视频 ≥ 95%
+- 去重准确率：完全重复 100%，相似图片 ≥ 98%
 
 - 崩溃率：≤ 0\.1%
 
@@ -57,12 +57,12 @@
 |键值存储|Preferences DataStore|替代SharedPreferences，协程友好，支持类型安全|
 |图片加载|Coil 2\.5\+|Kotlin原生，协程友好，内存优化优秀|
 |任务调度|WorkManager|后台任务、延时任务、进程被杀恢复，官方标准方案|
-|视频处理|原生 MediaMetadataRetriever \+ MediaExtractor|零包体积增量，满足基础需求；FFmpeg\-kit 作为高级版可选|
+|图片处理|原生 Bitmap API \+ ExifInterface|零包体积增量，满足基础需求；OpenCV 作为高精度版可选|
 |崩溃收集|Bugly（可选，默认关闭）|可配置开关，隐私政策明确说明|
 
 ### 2\. 编码与命名规范
 
-- **包名规范**：全小写，模块内按功能分包，如 `com.mediacleaner.feature.scanner`
+- **包名规范**：全小写，模块内按功能分包，如 `com.photocleaner.feature.scanner`
 
 - **类名规范**：大驼峰，后缀明确职责，如 `ImageDuplicateDetector`、`ScanViewModel`
 
@@ -85,13 +85,13 @@
 ### 1\. 多模块工程结构（根目录）
 
 ```Plaintext
-MediaCleaner/
+PhotoCleaner/
 ├── app/                          # 主应用模块，唯一的application模块
 ├── core/                         # 核心基础层
 │   ├── common/                   # 通用工具、基类、常量、扩展函数
 │   └── database/                 # Room数据库、实体类、DAO
 ├── feature/                      # 业务功能层，每个模块独立封装
-│   ├── scanner/                  # 媒体扫描模块
+│   ├── scanner/                  # 图片扫描模块
 │   ├── duplicate/                # 去重算法核心模块
 │   ├── fileops/                  # 文件操作、回收站模块
 │   └── settings/                 # 设置与配置模块
@@ -109,7 +109,7 @@ MediaCleaner/
 
 ```Plaintext
 app/src/main/
-├── java/com/mediacleaner/app/
+├── java/com/photocleaner/app/
 │   ├── MainActivity.kt           # 单Activity宿主
 │   ├── navigation/               # Compose 导航路由定义
 │   │   └── AppNavGraph.kt
@@ -119,7 +119,7 @@ app/src/main/
 │       ├── home/                 # 首页
 │       ├── scan/                 # 扫描中页
 │       ├── result/               # 去重结果页
-│       ├── detail/               # 媒体详情页
+│       ├── detail/               # 图片详情页
 │       ├── recyclebin/           # 回收站页
 │       └── settings/             # 设置页
 ├── res/                          # 应用级资源
@@ -136,7 +136,7 @@ app/src/main/
 
 ```Plaintext
 core-common/src/main/
-├── java/com/mediacleaner/core/common/
+├── java/com/photocleaner/core/common/
 │   ├── base/                     # 基类
 │   │   ├── BaseViewModel.kt
 │   │   └── BaseUseCase.kt
@@ -152,8 +152,7 @@ core-common/src/main/
 │   │   ├── MediaConstants.kt
 │   │   └── AppConstants.kt
 │   └── model/                    # 通用业务实体
-│       ├── MediaItem.kt          # 媒体文件基础实体
-│       ├── MediaType.kt          # 媒体类型枚举
+│       ├── ImageItem.kt          # 图片文件基础实体
 │       └── DuplicateGroup.kt     # 重复分组实体
 └── AndroidManifest.xml
 ```
@@ -162,13 +161,13 @@ core-common/src/main/
 
 ```Plaintext
 core-database/src/main/
-├── java/com/mediacleaner/core/database/
+├── java/com/photocleaner/core/database/
 │   ├── entity/                   # Room实体类
-│   │   ├── MediaItemEntity.kt
+│   │   ├── ImageItemEntity.kt
 │   │   ├── DuplicateGroupEntity.kt
 │   │   └── RecycleItemEntity.kt
 │   ├── dao/                      # 数据访问接口
-│   │   ├── MediaDao.kt
+│   │   ├── ImageDao.kt
 │   │   ├── DuplicateGroupDao.kt
 │   │   └── RecycleDao.kt
 │   ├── converter/                # 类型转换器
@@ -181,18 +180,18 @@ core-database/src/main/
 
 ```Plaintext
 feature-scanner/src/main/
-├── java/com/mediacleaner/feature/scanner/
+├── java/com/photocleaner/feature/scanner/
 │   ├── data/
 │   │   ├── datasource/
 │   │   │   ├── MediaStoreDataSource.kt
 │   │   │   └── SafDataSource.kt
 │   │   └── repository/
-│   │       └── MediaRepositoryImpl.kt
+│   │       └── ImageRepositoryImpl.kt
 │   ├── domain/
 │   │   ├── repository/
-│   │   │   └── MediaRepository.kt  # 接口定义
+│   │   │   └── ImageRepository.kt  # 接口定义
 │   │   └── usecase/
-│   │       ├── ScanMediaUseCase.kt
+│   │       ├── ScanImageUseCase.kt
 │   │       └── IncrementalScanUseCase.kt
 │   └── model/
 │       └── ScanProgress.kt        # 扫描进度状态
@@ -203,7 +202,7 @@ feature-scanner/src/main/
 
 ```Plaintext
 feature-duplicate/src/main/
-├── java/com/mediacleaner/feature/duplicate/
+├── java/com/photocleaner/feature/duplicate/
 │   ├── image/                     # 图片去重
 │   │   ├── ImageDuplicateDetector.kt
 │   │   ├── hash/
@@ -211,10 +210,6 @@ feature-duplicate/src/main/
 │   │   │   └── PHashCalculator.kt
 │   │   └── matcher/
 │   │       └── HammingDistanceMatcher.kt
-│   ├── video/                     # 视频去重
-│   │   ├── VideoDuplicateDetector.kt
-│   │   └── frame/
-│   │       └── KeyFrameExtractor.kt
 │   ├── domain/
 │   │   └── usecase/
 │   │       └── DetectDuplicateUseCase.kt
@@ -227,15 +222,15 @@ feature-duplicate/src/main/
 
 ```Plaintext
 feature-fileops/src/main/
-├── java/com/mediacleaner/feature/fileops/
+├── java/com/photocleaner/feature/fileops/
 │   ├── data/
 │   │   ├── FileOperatorImpl.kt
 │   │   └── RecycleManager.kt
 │   ├── domain/
 │   │   ├── FileOperator.kt        # 文件操作接口
 │   │   └── usecase/
-│   │       ├── DeleteMediaUseCase.kt
-│   │       ├── RestoreMediaUseCase.kt
+│   │       ├── DeleteImageUseCase.kt
+│   │       ├── RestoreImageUseCase.kt
 │   │       └── AutoClearRecycleUseCase.kt
 │   └── model/
 │       └── DeleteResult.kt
@@ -258,25 +253,23 @@ feature-fileops/src/main/
 
 ### 1\. 核心数据表设计
 
-#### 表1：媒体文件表 media\_item
+#### 表1：图片文件表 image\_item
 
-存储所有扫描到的图片/视频基础信息与哈希缓存，避免重复计算。
+存储所有扫描到的图片基础信息与哈希缓存，避免重复计算。
 
 |字段名|类型|约束|说明|
 |---|---|---|---|
-|id|Long|PRIMARY KEY|媒体ID，对应MediaStore的\_ID|
-|uri|String|NOT NULL|媒体内容URI|
+|id|Long|PRIMARY KEY|图片ID，对应MediaStore的\_ID|
+|uri|String|NOT NULL|图片内容URI|
 |path|String||文件绝对路径（安卓10\+仅作展示）|
 |name|String|NOT NULL|文件名|
-|type|Int|NOT NULL, INDEX|1=图片，2=视频|
 |size|Long|NOT NULL, INDEX|文件大小（字节）|
 |width|Int||宽度（像素）|
 |height|Int||高度（像素）|
-|duration|Long||视频时长（毫秒），图片为0|
 |mime\_type|String||文件MIME类型|
 |modify\_time|Long|NOT NULL, INDEX|文件修改时间戳（毫秒）|
 |file\_hash|String|INDEX|文件MD5哈希，计算后填充|
-|perception\_hash|String|INDEX|感知哈希值（图片为单值，视频为逗号分隔的帧哈希序列）|
+|perception\_hash|String|INDEX|感知哈希值|
 |orientation|Int||图片旋转角度（0/90/180/270）|
 |is\_calculated|Boolean|NOT NULL, DEFAULT 0|是否已计算哈希|
 |scan\_time|Long|NOT NULL|最后扫描时间|
@@ -288,11 +281,10 @@ feature-fileops/src/main/
 |字段名|类型|约束|说明|
 |---|---|---|---|
 |group\_id|Long|PRIMARY KEY AUTOINCREMENT|分组ID|
-|type|Int|NOT NULL|1=图片，2=视频|
 |similarity\_level|Int|NOT NULL|1=完全重复，2=高度相似|
-|media\_ids|String|NOT NULL|组内媒体ID列表，逗号分隔|
+|image\_ids|String|NOT NULL|组内图片ID列表，逗号分隔|
 |total\_size|Long|NOT NULL|组内总大小|
-|suggest\_keep\_id|Long||建议保留的媒体ID|
+|suggest\_keep\_id|Long||建议保留的图片ID|
 |create\_time|Long|NOT NULL|生成分组的时间|
 |is\_ignored|Boolean|DEFAULT 0|用户是否标记忽略此组|
 
@@ -306,7 +298,6 @@ feature-fileops/src/main/
 |original\_uri|String|NOT NULL|原文件URI|
 |original\_path|String|NOT NULL|原文件路径|
 |name|String|NOT NULL|文件名|
-|type|Int|NOT NULL|1=图片，2=视频|
 |size|Long|NOT NULL|文件大小|
 |temp\_path|String|NOT NULL|回收站临时文件路径|
 |delete\_time|Long|NOT NULL|删除时间戳|
@@ -315,94 +306,76 @@ feature-fileops/src/main/
 
 ### 2\. 数据库配置
 
-- 数据库名：`mediacleaner.db`
+- 数据库名：`photocleaner.db`
 
 - 版本号：1，后续升级使用Migration
 
 - 事务优化：批量插入使用 `@Transaction` 注解，提升写入速度
 
-- 索引设计：在 size、modify\_time、type、file\_hash 上建立索引，大幅提升分组与查询速度
+- 索引设计：在 size、modify\_time、file\_hash 上建立索引，大幅提升分组与查询速度
 
 ### 3\. 配置存储（Preferences DataStore）
 
 存储用户设置项，键值对形式：
 
-- 扫描设置：最小图片大小、最短视频时长、忽略目录列表
+- 扫描设置：最小图片大小、忽略目录列表、忽略截图、忽略GIF
 
 - 去重设置：精度模式（快速/标准/高精度）、相似度阈值
 
 - 删除设置：删除前确认、自动清理周期、默认保留策略
 
-- 通用设置：深色模式、通知开关、是否首次启动、上次选择的扫描类型
+- 通用设置：深色模式、通知开关、是否首次启动
 
 ---
 
 ## 五、核心模块详细设计
 
-### 1\. 媒体扫描模块
+### 1\. 图片扫描模块
 
 #### 核心接口定义
 
-通过枚举参数控制扫描类型，从架构层面原生支持分类扫描，而非前端过滤。
-
 ```Kotlin
-// 媒体类型枚举
-enum class MediaType {
-    ALL,        // 全部媒体
-    IMAGE,      // 仅图片
-    VIDEO       // 仅视频
-}
-
-interface MediaRepository {
+interface ImageRepository {
     // 全量扫描
     suspend fun scanAll(
-        mediaType: MediaType,
         progressCallback: (ScanProgress) -> Unit
-    ): List<MediaItem>
+    ): List<ImageItem>
     
     // 增量扫描
     suspend fun scanIncremental(
-        lastScanTime: Long,
-        mediaType: MediaType
-    ): List<MediaItem>
+        lastScanTime: Long
+    ): List<ImageItem>
     
     // 扫描指定目录（SAF）
     suspend fun scanDirectory(
-        treeUri: Uri,
-        mediaType: MediaType
-    ): List<MediaItem>
+        treeUri: Uri
+    ): List<ImageItem>
 }
 ```
 
 #### 扫描执行流程
 
-1. **前置校验**：检查媒体权限，无权限则引导授权
+1. **前置校验**：检查媒体读取权限，无权限则引导授权
 
-2. **分类型查询优化**：从源头控制查询范围，显著提升单类型扫描速度
+2. **系统库查询**：通过ContentResolver查询 `MediaStore.Images.Media.EXTERNAL_CONTENT_URI`，按修改时间倒序，分页加载（每页200条）
 
-    - 选择 `MediaType.IMAGE`：仅查询 `MediaStore.Images.Media.EXTERNAL_CONTENT_URI` 表，不请求视频相关数据
-
-    - 选择 `MediaType.VIDEO`：仅查询 `MediaStore.Video.Media.EXTERNAL_CONTENT_URI` 表，不请求图片相关数据
-
-    - 选择 `MediaType.ALL`：并行查询两张表，结果合并后统一返回
-
-3. **数据过滤**：对应类型的过滤规则自动生效：图片模式应用最小尺寸、忽略截图等规则；视频模式应用最小时长等规则。同时过滤\.nomedia目录、系统目录
+3. **数据过滤**：应用过滤规则：小于设定阈值的文件、\.nomedia目录、系统目录、用户添加的忽略目录
 
 4. **数据入库**：批量插入Room数据库，已存在的更新修改时间与基础信息
 
 5. **增量判断**：非首次扫描时，仅查询 `DATE_MODIFIED > 上次扫描时间` 的文件
 
-6. **进度回调**：实时回传已扫描数量、发现数量、预估剩余时间，文案随扫描类型动态匹配
+6. **进度回调**：实时回传已扫描数量、发现数量、预估剩余时间
 
 #### 关键优化点
 
-- 单类型扫描相比全量扫描，可减少约40%\~60%的数据库查询与后续计算量
+- 优先使用系统MediaStore索引，拒绝手动遍历文件系统，速度提升10倍以上
+
+- 增量扫描机制，二次扫描速度提升90%以上
 
 - 利用SQL排序特性，查询时直接按大小排序，减少后续分组计算量
 
 - 损坏文件、无权限文件自动跳过，记录错误日志，不中断扫描
-
-- 增量扫描机制，二次扫描速度提升90%以上
 
 ### 2\. 去重算法模块
 
@@ -410,18 +383,13 @@ interface MediaRepository {
 
 ```Kotlin
 interface DuplicateDetector {
-    suspend fun detect(items: List<MediaItem>): List<DuplicateGroup>
+    suspend fun detect(items: List<ImageItem>): List<DuplicateGroup>
 }
 
 interface DetectDuplicateUseCase {
-    suspend fun execute(
-        items: List<MediaItem>,
-        mediaType: MediaType
-    ): List<DuplicateGroup>
+    suspend fun execute(items: List<ImageItem>): List<DuplicateGroup>
 }
 ```
-
-去重引擎根据传入的媒体类型，仅执行对应类型的去重逻辑，避免无效计算：仅图片模式只运行图片链路，仅视频模式只运行视频链路，全部模式两类任务并行调度。
 
 #### 图片去重执行链路
 
@@ -479,61 +447,6 @@ interface DetectDuplicateUseCase {
 |截图后二次保存的截图|高度相似组|95% \~ 99%|
 |完全复制的同文件|完全重复组|100%|
 
-#### 视频去重执行链路
-
-针对「同一视频不同平台下载、不同码率压缩、不同封装格式、二次压制」等通用场景，采用与图片对齐的三级链路与百分制呈现逻辑。
-
-##### 一级过滤：元数据分桶规则
-
-仅做强排除，确保压缩/转封装的同内容视频不会漏判：
-
-1. **时长严格匹配**：误差±2秒（同一视频无论怎么压缩，时长基本不变，是最可靠的粗筛条件）
-
-2. **宽高比例匹配**：误差≤0\.5%（等比例缩放不改变宽高比）
-
-3. **长边尺寸差异≤2倍**：避免缩略版与完整版误分组，同时覆盖绝大多数平台压缩场景
-
-满足条件的视频进入同一候选组，参与后续计算；同组内文件数\<2直接丢弃。
-
-##### 二级过滤：文件哈希匹配
-
-- 仅完全重复链路执行MD5校验，哈希一致判定为**100% 完全重复**（字节级完全相同）。
-
-- 绝大多数跨平台、压缩后的视频文件哈希必然不同，直接进入关键帧序列对比。
-
-##### 三级过滤：关键帧哈希序列核心判定
-
-- **抽帧策略**：按时长动态抽帧，\<30分钟抽3帧，30min\~2h抽5帧，\>2h抽8帧；均匀分布全片，避开首尾1%时长，使用 `OPTION_CLOSEST_SYNC` 优先抽取关键帧。
-
-- **单帧计算**：每一帧均计算dHash差值哈希，形成「帧哈希序列」。
-
-- **相似度计算**：对两个视频的对应帧逐一计算汉明距离，取**平均汉明距离**，按公式换算为视觉相似度：
-`视频视觉相似度 = ((64 - 平均汉明距离) / 64) × 100%`，结果取整数，最高显示99%。
-
-- **判定阈值**：平均汉明距离≤8（对应相似度≥88%）判定为高度相似视频，覆盖普通压缩、转码、轻微水印等绝大多数场景。
-
-##### 高精度模式增强（可选）
-
-开启高精度模式后，叠加双重校验，进一步降低误判率：
-
-1. 抽帧数量提升至15\~20帧，帧相似度权重占70%
-
-2. 提取音频片段计算声学指纹，音频相似度权重占30%
-
-3. 综合相似度 = 帧视觉相似度 × 0\.7 \+ 音频相似度 × 0\.3
-
-4. 适用于区分「画面相同音轨不同」「剪辑版与完整版」等复杂场景
-
-##### 典型场景覆盖验证
-
-|场景|判定结果|相似度区间|
-|---|---|---|
-|完全复制的同一视频文件|完全重复组|100%|
-|同一视频不同码率压制（1080p高码率/低码率）|高度相似组|92% \~ 98%|
-|同一视频不同封装格式（MP4/MKV/MOV）|高度相似组|95% \~ 99%|
-|平台下载的压缩版视频 \+ 本地原版视频|高度相似组|90% \~ 96%|
-|带轻微水印/片头的二次传播版|高度相似组|88% \~ 93%|
-
 #### 并发控制
 
 - 自定义协程线程池，最大并发数 = CPU核心数 × 2
@@ -568,13 +481,13 @@ interface DetectDuplicateUseCase {
 
 - 文件移入时重命名为 `recycle_时间戳_原文件名`，记录原路径信息
 
-- 恢复时优先放回原路径，原目录不存在则放入 `Download/MediaCleaner恢复/`
+- 恢复时优先放回原路径，原目录不存在则放入 `Download/PhotoCleaner恢复/`
 
 - 优势：私有目录无需额外权限，其他应用无法访问，安全性高
 
 #### 删除安全增强
 
-- 相机拍摄原图/原视频、包含完整EXIF/元数据的文件，删除时弹窗额外增加提示：「该文件为原始拍摄文件，请确认删除」
+- 相机拍摄原图、包含完整EXIF的图片，删除时弹窗额外增加提示：「该文件为相机拍摄原图，请确认删除」
 
 - 所有删除操作默认移入回收站，7天内可随时恢复
 
@@ -602,23 +515,19 @@ interface DetectDuplicateUseCase {
 
 - **顶部区域**：存储概览卡片
 
-    - 显示总存储占用、图片总数、视频总数、预估可释放空间
+    - 显示总存储占用、图片总数、预估可释放空间
 
     - 环形进度条可视化存储占比
 
-- **中部操作区**：主操作按钮 \+ 类型选择
+- **中部操作区**：主操作按钮
 
-    - 大按钮「一键扫描重复文件」
+    - 大按钮「一键扫描重复图片」
 
-    - 按钮下方设置横向分段单选切换组，三个选项：全部（默认）、仅图片、仅视频
-
-    - 系统自动记忆用户上次选择的类型，下次启动默认选中
-
-    - 次级入口：自定义目录扫描、扫描记录，入口内同步支持类型选择
+    - 次级入口：自定义目录扫描、扫描记录
 
 - **底部结果区**：上次扫描结果快捷入口
 
-    - 分类卡片：完全重复图片、相似图片、重复视频
+    - 分类卡片：完全重复图片、相似图片
 
     - 每张卡片显示组数、可释放空间，点击进入对应结果页
 
@@ -634,7 +543,7 @@ interface DetectDuplicateUseCase {
 
 - 中心大圆形进度条，显示百分比
 
-- 进度信息：已扫描文件数、已发现重复组数、预计释放空间、预计剩余时间，文案随扫描类型动态匹配
+- 进度信息：已扫描图片数、已发现重复组数、预计释放空间、预计剩余时间
 
 - 实时扫描文件名滚动展示（每秒更新）
 
@@ -645,14 +554,6 @@ interface DetectDuplicateUseCase {
 #### （3）去重结果页 ResultScreen
 
 - **顶部一级Tab**：完全重复、高度相似
-
-- **二级类型筛选栏**：全部重复、仅图片重复、仅视频重复
-
-    - 若本次为单类型扫描，自动锁定对应类型，筛选栏置灰不可切换
-
-    - 若为全量扫描，可自由切换，仅前端数据过滤，无需重新扫描
-
-    - 页面顶部「可释放空间」数值随筛选类型动态更新
 
 - **分组列表**：按「重复组」为单位纵向排列，每组为独立卡片，按可释放空间从大到小排序
 
@@ -679,39 +580,37 @@ interface DetectDuplicateUseCase {
 
 2. **推荐保留标识**
 
-    - 组内权重排名第一的图片/视频，左上角打**绿色「推荐保留」角标**
+    - 组内权重排名第一的图片，左上角打**绿色「推荐保留」角标**
 
-    - 该文件默认不勾选，其余所有重复文件默认自动勾选为待删除
+    - 该图片默认不勾选，其余所有重复图片默认自动勾选为待删除
 
-    - 推荐保留项在网格中占2格放大显示，其余待删除项等比例缩小
+    - 推荐保留图在网格中占2格放大显示，其余待删除图等比例缩小
 
-3. **多文件重复（≥3个）呈现逻辑**
+3. **多图重复（≥3张）呈现逻辑**
 
-    - 统一以「权重最高的推荐保留项」为基准，所有其他文件都显示与基准的相似度
+    - 统一以「权重最高的推荐保留图」为基准，所有其他图片都显示与基准图的相似度
 
     - 缩略图按权重从高到低、相似度从高到低排列
 
     - 点击「展开详情」可看到完整列表，附带分辨率、大小、来源目录、格式、保留得分等参数
 
-    - 支持长按任意文件设为「新的保留基准」，其余文件的相似度、勾选状态自动刷新
+    - 支持长按任意图片设为「新的保留基准」，其余图片的相似度、勾选状态自动刷新
 
 - **顶部操作栏**：全选、反选、一键保留最优、删除选中、忽略此组
 
 - **悬浮操作按钮**：底部固定「删除选中项（XX MB）」
 
-#### （4）媒体详情页 DetailScreen
+#### （4）图片详情页 DetailScreen
 
 分两大区块，完整展示文件全量信息：
 
-1. **预览区**：顶部大图预览，视频可播放
+1. **预览区**：顶部大图预览，支持双指缩放
 
 2. **信息区**：可滚动的详情列表
 
-    - 基础信息：文件名、类型、大小、尺寸/分辨率、修改时间、文件路径
+    - 基础信息：文件名、类型、大小、尺寸、修改时间、文件路径
 
-    - 拍摄信息（图片EXIF）：拍摄时间、相机厂商、设备型号、光圈、曝光时间、ISO、焦距、闪光灯、白平衡（无数据显示「\-」）
-
-    - 编码信息（视频）：封装格式、视频编码、帧率、码率、音频编码、声道数、采样率
+    - 拍摄信息（EXIF）：拍摄时间、相机厂商、设备型号、光圈、曝光时间、ISO、焦距、闪光灯、白平衡（无数据显示「\-」）
 
     - 保留理由说明：简要标注推荐保留原因，例如「分辨率最高、相机原图、文件体积最大」
 
@@ -736,8 +635,6 @@ interface DetectDuplicateUseCase {
 1. **扫描设置**
 
     - 最小图片大小（默认10KB，滑块调节）
-
-    - 最短视频时长（默认5秒，滑块调节）
 
     - 忽略文件夹管理（添加/删除忽略目录）
 
@@ -800,36 +697,13 @@ interface DetectDuplicateUseCase {
 |||拍摄时间最早（有EXIF时）|5分|
 |||文件修改时间最早（无EXIF时启用）|3分|
 
-#### 视频保留权重评分（总分100分）
-
-|维度大类|权重占比|细分项|评分规则|
-|---|---|---|---|
-|**画质维度**|60分（核心）|——|决定视频画质的核心指标，优先保留更清晰的版本|
-|||分辨率（30分）|以组内最大长边像素为基准，得分 = \(当前长边 / 组内最大长边\) × 30，最高30分。4K \> 2K \> 1080P \> 720P|
-|||视频码率（20分）|以组内最高码率为基准，得分 = \(当前码率 / 组内最高码率\) × 20，最高20分。同分辨率下码率越高，画质损失越小|
-|||帧率（5分）|60fps及以上得5分；30fps得3分；25fps及以下得2分|
-|||编码效率（5分）|H\.265/HEVC=5分；H\.264/AVC=4分；MPEG\-4=2分；老旧编码=1分|
-|**来源路径维度**|25分|——|标识视频的“原始程度”，优先保留原始来源文件|
-|||DCIM/Camera 相机拍摄目录|25分|
-|||DCIM/ScreenRecorder 系统录屏|20分|
-|||Movies 系统视频目录|15分|
-|||Download 系统下载目录|10分|
-|||第三方APP私有目录（微信/浏览器/平台缓存）|5分|
-|||临时缓存目录|0分|
-|**音频与元数据维度**|10分|——|标识音轨质量与元数据完整性|
-|||音频质量（5分）|双声道高码率得5分；单声道/低码率得2分；无音轨得0分|
-|||元数据完整性（5分）|有完整拍摄信息/原始元数据得5分；仅有基础编码信息得3分；元数据被抹除得0分|
-|**时间维度**|5分|——|辅助判断原始版本，优先保留更早的文件|
-|||拍摄时间最早（有拍摄元数据时）|5分|
-|||文件修改时间最早（无拍摄信息时启用）|3分|
-
 #### 排序与兜底规则
 
-1. 同组内所有文件按总分从高到低排序，**总分第一名自动成为「推荐保留项」**。
+1. 同组内所有图片按总分从高到低排序，**总分第一名自动成为「推荐保留项」**。
 
-2. 总分相同时，按以下优先级二次判定：分辨率 \> 文件体积/码率 \> 路径来源 \> 修改时间。
+2. 总分相同时，按以下优先级二次判定：分辨率 \> 文件体积 \> 路径来源 \> 修改时间。
 
-3. 完全重复（100%相同）的多个文件，依然执行权重排序，优先保留原始来源版本。
+3. 完全重复（100%相同）的多张图片，依然执行权重排序，优先保留原始来源版本。
 
 4. 原始拍摄文件删除时，弹窗额外增加风险提示。
 
@@ -837,13 +711,9 @@ interface DetectDuplicateUseCase {
 
 - **防误操作**：所有删除操作必须二次确认，删除后5秒内Snackbar可撤销
 
-- **基准自由切换**：点击组内任意文件，可手动设为新的保留基准，系统自动重新计算其余文件的相似度与勾选状态
+- **基准自由切换**：点击组内任意图片，可手动设为新的保留基准，系统自动重新计算其余文件的相似度与勾选状态
 
-- **对比辅助**：
-
-    - 图片：双图分屏对比、滑动渐变对比，支持同步缩放滑动
-
-    - 视频：双视频并排播放对比，支持同步暂停/进度跳转
+- **对比辅助**：双图分屏对比、滑动渐变对比，支持同步缩放滑动
 
 - **来源标签**：对识别出的常见来源（相机拍摄、系统截图、微信、浏览器、知乎），在缩略图下方打小标签
 
@@ -865,7 +735,7 @@ interface DetectDuplicateUseCase {
 |---|---|---|
 |Android 8\.0 \~ 9\.0|`READ_EXTERNAL_STORAGE` `WRITE_EXTERNAL_STORAGE`|首次启动引导申请|
 |Android 10 \~ 12|`READ_EXTERNAL_STORAGE`|首次启动引导申请；写入通过MediaStore实现，不申请写权限|
-|Android 13\+|`READ_MEDIA_IMAGES` `READ_MEDIA_VIDEO`|首次启动分场景申请|
+|Android 13\+|`READ_MEDIA_IMAGES`|首次启动引导申请|
 |全版本|`POST_NOTIFICATIONS`（Android13\+）|开始扫描时申请，用于前台服务通知|
 |全版本|`FOREGROUND_SERVICE` `WAKE_LOCK`|清单文件声明，扫描时启动前台服务|
 
@@ -873,7 +743,7 @@ interface DetectDuplicateUseCase {
 
 - 不申请 `MANAGE_EXTERNAL_STORAGE` 高危权限，确保应用市场审核通过
 
-- 所有媒体读取通过 `MediaStore` 内容URI实现，不直接访问文件路径
+- 所有图片读取通过 `MediaStore` 内容URI实现，不直接访问文件路径
 
 - 文件删除通过系统API `createDeleteRequest` 实现，合规弹窗确认
 
@@ -929,8 +799,6 @@ interface DetectDuplicateUseCase {
 
 - 线程池大小自适应设备CPU核心数，避免过度并发
 
-- 分类型扫描从源头减少计算量，单类型扫描提速40%\~60%
-
 ### 3\. 内存优化
 
 - Bitmap 复用池，减少频繁GC
@@ -951,9 +819,9 @@ interface DetectDuplicateUseCase {
 
 - 开启R8代码混淆与资源压缩
 
-- 视频处理默认使用原生API，FFmpeg作为插件化动态加载
+- 图片处理默认使用原生API，OpenCV作为插件化动态加载
 
-- 目标：release包体积 ≤ 15MB
+- 目标：release包体积 ≤ 12MB
 
 ---
 
@@ -1012,11 +880,9 @@ interface DetectDuplicateUseCase {
 
 4. **性能测试**：
 
-    - 基准测试：1万张图/1千个视频的扫描速度、内存、CPU、发热
+    - 基准测试：1万张图片的扫描速度、内存、CPU、发热
 
     - 压力测试：5万张图极限场景，确保不崩溃、速度可接受
-
-    - 单类型扫描性能验证
 
 5. **兼容性测试**：覆盖 Android 8\.0 \~ 14，华为、小米、OPPO、vivo、三星主流机型
 
@@ -1024,15 +890,13 @@ interface DetectDuplicateUseCase {
 
 - 零文件、单个文件、全是重复文件、无重复文件
 
-- 超大文件（4GB以上视频）、超小文件（1KB图片）
+- 超大文件、超小文件（1KB图片）
 
 - 损坏文件、0字节文件、格式错误文件
 
 - 旋转图片、裁剪图片、滤镜图片、不同格式同内容图片
 
-- 横竖版视频、不同码率同内容视频、带黑边视频
-
-- 跨平台多来源同图/同视频场景
+- 跨平台多来源同图场景
 
 - 权限拒绝、权限中途收回、飞行模式、低存储
 
@@ -1076,7 +940,7 @@ interface DetectDuplicateUseCase {
 
 ### 1\. 隐私核心原则
 
-- **纯本地运算**：所有扫描、对比、删除操作100%在本地完成，不上传任何媒体文件与用户数据
+- **纯本地运算**：所有扫描、对比、删除操作100%在本地完成，不上传任何图片与用户数据
 
 - **最小权限原则**：仅申请必要的媒体读取权限，不申请通讯录、定位、手机号等无关权限
 
@@ -1090,7 +954,7 @@ interface DetectDuplicateUseCase {
 
 - 权限申请前说明用途，让用户明确知道为什么需要该权限
 
-- 不收集、不上传用户的媒体文件内容、文件路径等敏感信息
+- 不收集、不上传用户的图片内容、文件路径等敏感信息
 
 - 符合《个人信息保护法》《网络安全法》要求，满足国内应用市场审核标准
 
@@ -1116,7 +980,7 @@ interface DetectDuplicateUseCase {
 
 ### 2\. 扫描记录
 
-- 保存每次扫描的时间、扫描类型、扫描文件数、发现重复数、释放空间数
+- 保存每次扫描的时间、扫描图片数、发现重复数、释放空间数
 
 - 可查看历史扫描记录，对比存储空间变化
 
