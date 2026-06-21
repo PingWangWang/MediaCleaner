@@ -1,5 +1,8 @@
 package com.photocleaner.app.ui.result
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,17 +17,62 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.photocleaner.core.common.model.DuplicateGroup
 import com.photocleaner.core.common.model.GroupType
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
-    groups: List<DuplicateGroup>,
+    viewModel: ResultViewModel = hiltViewModel(),
     onItemClick: (Long) -> Unit,
     onBack: () -> Unit
 ) {
-    var selectedGroups by remember { mutableStateOf(setOf<Long>()) }
+    val groups = viewModel.groups
+    val selectedIds by viewModel.selectedGroupIds.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var showCleanConfirm by remember { mutableStateOf(false) }
+
+    // Progressive display: exact duplicates first, then similar
+    val sortedGroups = remember(groups) {
+        groups.sortedByDescending { it.groupType }
+    }
+
+    if (showCleanConfirm) {
+        val selectedCount = if (selectedIds.isEmpty()) groups.size else selectedIds.size
+        AlertDialog(
+            onDismissRequest = { showCleanConfirm = false },
+            title = { Text("一键清理") },
+            text = { Text("确定要删除选中的 $selectedCount 组图片吗？删除后可在回收站中恢复。") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCleanConfirm = false
+                        scope.launch {
+                            val result = viewModel.deleteSelected()
+                            snackbarHostState.showSnackbar(
+                                message = "删除成功，可在回收站中恢复",
+                                actionLabel = "撤销",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showCleanConfirm = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -34,21 +82,38 @@ fun ResultScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.DoneAll, contentDescription = "返回")
                     }
+                },
+                actions = {
+                    if (groups.isNotEmpty()) {
+                        TextButton(onClick = {
+                            if (selectedIds.size == groups.size) viewModel.clearSelection()
+                            else viewModel.selectAll()
+                        }) {
+                            Text(if (selectedIds.size == groups.size) "取消全选" else "全选")
+                        }
+                    }
                 }
             )
         },
         floatingActionButton = {
             if (groups.isNotEmpty()) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* Perform cleanup */ },
+                    onClick = { showCleanConfirm = true },
                     icon = { Icon(Icons.Default.CleaningServices, contentDescription = null) },
-                    text = { Text("一键清理") }
+                    text = {
+                        val totalSize = if (selectedIds.isEmpty()) {
+                            groups.sumOf { it.size }
+                        } else {
+                            groups.filter { it.groupId in selectedIds }.sumOf { it.size }
+                        }
+                        Text("清理 ${formatSize(totalSize)}")
+                    }
                 )
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (groups.isEmpty()) {
-            // Empty state
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -78,8 +143,8 @@ fun ResultScreen(
                 )
             }
         } else {
-            // Summary header
             Column(modifier = Modifier.padding(padding)) {
+                // Summary card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,31 +160,43 @@ fun ResultScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        val totalSize = groups.sumOf { it.size }
                         Text(
-                            text = "可释放空间：${formatSize(totalSize)}",
+                            text = "可释放空间：${formatSize(groups.sumOf { it.size })}",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "完全重复: ${groups.count { it.groupType == GroupType.EXACT_DUPLICATE }}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "高度相似: ${groups.count { it.groupType == GroupType.HIGH_SIMILARITY }}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
 
+                // Group list
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(groups) { group ->
-                        DuplicateGroupCard(
-                            group = group,
-                            isSelected = group.groupId in selectedGroups,
-                            onClick = { onItemClick(group.groupId) },
-                            onToggleSelect = {
-                                selectedGroups = if (group.groupId in selectedGroups) {
-                                    selectedGroups - group.groupId
-                                } else {
-                                    selectedGroups + group.groupId
-                                }
-                            }
-                        )
+                    items(sortedGroups, key = { it.groupId }) { group ->
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn() + slideInVertically()
+                        ) {
+                            DuplicateGroupCard(
+                                group = group,
+                                isSelected = group.groupId in selectedIds,
+                                onClick = { onItemClick(group.groupId) },
+                                onToggleSelect = { viewModel.toggleGroupSelection(group.groupId) }
+                            )
+                        }
                     }
                 }
             }
@@ -175,6 +252,20 @@ private fun DuplicateGroupCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (group.bestImage != null) {
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.tertiaryContainer
+                        ) {
+                            Text(
+                                text = "推荐保留",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -195,7 +286,6 @@ private fun DuplicateGroupCard(
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             shape = MaterialTheme.shapes.small
                         ) {
-                            // In real app, use Coil AsyncImage
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = image.name.take(2),

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 间距 (Spacing) -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <!-- 缩略图尺寸 (Thumbnail) -->
+    <dimen name="thumbnail_sm">48dp</dimen>
+    <dimen name="thumbnail_md">64dp</dimen>
+    <dimen name="thumbnail_lg">96dp</dimen>
+
+    <!-- 图标尺寸 (Icon Size) -->
+    <dimen name="icon_size_sm">18dp</dimen>
+    <dimen name="icon_size_md">24dp</dimen>
+    <dimen name="icon_size_lg">48dp</dimen>
+    <dimen name="icon_size_xl">80dp</dimen>
+
+    <!-- 圆角 (Corner Radius) -->
+    <dimen name="corner_sm">4dp</dimen>
+    <dimen name="corner_md">8dp</dimen>
+    <dimen name="corner_lg">12dp</dimen>
+
+    <!-- 组件尺寸 (Component Size) -->
+    <dimen name="fab_size">56dp</dimen>
+    <dimen name="top_bar_height">64dp</dimen>
+</resources>

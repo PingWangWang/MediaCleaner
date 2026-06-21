@@ -13,17 +13,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.photocleaner.core.common.model.DuplicateGroup
-import kotlinx.coroutines.delay
 
 @Composable
 fun ScanScreen(
+    viewModel: ScanViewModel = hiltViewModel(),
     onScanComplete: (List<DuplicateGroup>) -> Unit,
     onCancel: () -> Unit
 ) {
-    var scanProgress by remember { mutableStateOf(0f) }
-    var scanPhase by remember { mutableStateOf("正在扫描图片...") }
-    var scannedCount by remember { mutableIntStateOf(0) }
+    val scanState by viewModel.scanState.collectAsState()
+
+    // Navigate when complete
+    LaunchedEffect(scanState) {
+        if (scanState is ScanUiState.Complete) {
+            val completeState = scanState as ScanUiState.Complete
+            onScanComplete(completeState.groups)
+        }
+    }
+
+    // Start scan on first composition
+    LaunchedEffect(Unit) {
+        viewModel.startScan()
+    }
 
     // Pulsing animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -36,24 +48,6 @@ fun ScanScreen(
         ),
         label = "pulseAlpha"
     )
-
-    // Simulate scan progress
-    LaunchedEffect(Unit) {
-        // In real app, this would call ScanImageUseCase
-        val totalSteps = 100
-        for (i in 1..totalSteps) {
-            scanProgress = i / 100f
-            scannedCount = (i * 50)
-            when {
-                i < 30 -> scanPhase = "正在扫描图片..."
-                i < 60 -> scanPhase = "正在计算哈希值..."
-                i < 85 -> scanPhase = "正在分组对比..."
-                else -> scanPhase = "正在整理结果..."
-            }
-            delay(50) // Simulate work
-        }
-        onScanComplete(emptyList())
-    }
 
     Scaffold(
         topBar = {
@@ -75,59 +69,122 @@ fun ScanScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Circular progress
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(200.dp)
-                    .alpha(pulseAlpha)
-            ) {
-                CircularProgressIndicator(
-                    progress = { scanProgress },
-                    modifier = Modifier.fillMaxSize(),
-                    strokeWidth = 8.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-                Text(
-                    text = "${(scanProgress * 100).toInt()}%",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+            when (val state = scanState) {
+                is ScanUiState.Idle -> {
+                    Text("准备扫描...", fontSize = 18.sp)
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                is ScanUiState.Starting -> {
+                    CircularProgressIndicator(modifier = Modifier.size(80.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("正在准备扫描...", fontSize = 16.sp)
+                }
 
-            Text(
-                text = scanPhase,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+                is ScanUiState.Scanning -> {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(200.dp)
+                            .alpha(pulseAlpha)
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { state.progress },
+                            modifier = Modifier.fillMaxSize(),
+                            strokeWidth = 8.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        Text(
+                            text = "${(state.progress * 100).toInt()}%",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-            Text(
-                text = "已扫描 $scannedCount 张图片",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
+                    Text(
+                        text = state.phase,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-            Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "请保持应用在前台运行",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center
-            )
+                    Text(
+                        text = "已扫描 ${state.scannedCount}/${state.totalCount} 张图片",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    if (state.foundDuplicates > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "已发现 ${state.foundDuplicates} 组重复",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
-            OutlinedButton(onClick = onCancel) {
-                Text("取消扫描")
+                is ScanUiState.Complete -> {
+                    CircularProgressIndicator(
+                        progress = { 1f },
+                        modifier = Modifier.size(80.dp),
+                        strokeWidth = 6.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "扫描完成！",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "发现 ${state.groups.size} 组重复图片",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "即将跳转到结果页...",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+
+                is ScanUiState.Error -> {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "扫描失败",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = state.message,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = { viewModel.startScan() }) {
+                        Text("重试")
+                    }
+                }
             }
         }
     }

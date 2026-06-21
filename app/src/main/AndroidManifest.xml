@@ -39,7 +39,7 @@
             android:exported="false"
             tools:node="merge">
             <meta-data
-                android:name="androidx.startup.StartupInitializer"
+                android:name="com.photocleaner.core.common.startup.PhotoCleanerInitializer"
                 android:value="androidx.startup" />
         </provider>
 
@@ -57,6 +57,11 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <service
+            android:name="com.photocleaner.feature.scanner.data.ScanForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
     </application>
 </manifest>

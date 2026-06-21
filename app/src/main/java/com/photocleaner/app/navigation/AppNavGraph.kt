@@ -2,9 +2,9 @@ package com.photocleaner.app.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -18,55 +18,129 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.photocleaner.app.ui.detail.DetailScreen
 import com.photocleaner.app.ui.home.HomeScreen
 import com.photocleaner.app.ui.recyclebin.RecycleBinScreen
+import com.photocleaner.app.ui.result.ResultScreen
 import com.photocleaner.app.ui.scan.ScanScreen
 import com.photocleaner.app.ui.settings.SettingsScreen
 
-sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    data object Home : Screen("home", "首页", Icons.Default.Home)
-    data object Scan : Screen("scan", "扫描", Icons.Default.ClearAll)
-    data object RecycleBin : Screen("recycle_bin", "回收站", Icons.Default.Delete)
-    data object Settings : Screen("settings", "设置", Icons.Default.Settings)
-}
+/**
+ * 底部导航栏项定义。
+ *
+ * @property route  导航路由
+ * @property label  显示的标签文本
+ * @property icon   显示的图标
+ */
+private data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector
+)
 
-val bottomNavItems = listOf(Screen.Home, Screen.Scan, Screen.RecycleBin, Screen.Settings)
+/** 底部导航栏显示的四个主屏幕 */
+private val bottomNavItems = listOf(
+    BottomNavItem(NavRoutes.HOME, "首页", Icons.Default.Home),
+    BottomNavItem(NavRoutes.SCAN, "扫描", Icons.Default.ClearAll),
+    BottomNavItem(NavRoutes.RECYCLE_BIN, "回收站", Icons.Default.Delete),
+    BottomNavItem(NavRoutes.SETTINGS, "设置", Icons.Default.Settings)
+)
+
+/** 不显示底部导航栏的路由集合 */
+private val routesWithoutBottomBar = setOf(NavRoutes.RESULT, NavRoutes.DETAIL)
 
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // 只在主屏幕显示底部导航栏
+    val showBottomBar = currentRoute !in routesWithoutBottomBar
 
     Scaffold(
-        bottomBar = { AppBottomBar(navController) }
+        bottomBar = {
+            if (showBottomBar) {
+                AppBottomBar(navController)
+            }
+        }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = NavRoutes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) {
+            // ---------- 主页 ----------
+            composable(NavRoutes.HOME) {
                 HomeScreen(
-                    onStartScan = { navController.navigate(Screen.Scan.route) },
-                    onOpenSettings = { navController.navigate(Screen.Settings.route) },
-                    onOpenRecycleBin = { navController.navigate(Screen.RecycleBin.route) }
+                    onStartScan = { navController.navigate(NavRoutes.SCAN) },
+                    onOpenSettings = { navController.navigate(NavRoutes.SETTINGS) },
+                    onOpenRecycleBin = { navController.navigate(NavRoutes.RECYCLE_BIN) }
                 )
             }
-            composable(Screen.Scan.route) {
+
+            // ---------- 扫描页 ----------
+            composable(NavRoutes.SCAN) {
                 ScanScreen(
-                    onScanComplete = { /* navigate to result */ },
+                    onScanComplete = { groups ->
+                        // 将扫描结果存入共享单例，跳转结果页
+                        ScanResultHolder.groups = groups
+                        navController.navigate(NavRoutes.RESULT) {
+                            // 移除扫描页，避免按返回键回到扫描状态
+                            popUpTo(NavRoutes.SCAN) { inclusive = true }
+                        }
+                    },
                     onCancel = { navController.popBackStack() }
                 )
             }
-            composable(Screen.RecycleBin.route) {
+
+            // ---------- 结果页 ----------
+            composable(NavRoutes.RESULT) {
+                ResultScreen(
+                    groups = ScanResultHolder.groups,
+                    onItemClick = { groupId ->
+                        // 找到被点击的分组，存入共享单例供详情页使用
+                        ScanResultHolder.selectedGroup =
+                            ScanResultHolder.groups.firstOrNull { it.groupId == groupId }
+                        navController.navigate(NavRoutes.detail(groupId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // ---------- 详情页 ----------
+            composable(
+                route = NavRoutes.DETAIL,
+                arguments = listOf(
+                    navArgument("groupId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
+                DetailScreen(
+                    groupId = groupId,
+                    onBack = { navController.popBackStack() },
+                    onDelete = { imageIds ->
+                        // 后续可接入删除逻辑
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // ---------- 回收站 ----------
+            composable(NavRoutes.RECYCLE_BIN) {
                 RecycleBinScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(Screen.Settings.route) {
+
+            // ---------- 设置页 ----------
+            composable(NavRoutes.SETTINGS) {
                 SettingsScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -81,13 +155,13 @@ fun AppBottomBar(navController: NavHostController) {
     val currentDestination = navBackStackEntry?.destination
 
     NavigationBar {
-        bottomNavItems.forEach { screen ->
+        bottomNavItems.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(screen.icon, contentDescription = screen.label) },
-                label = { Text(screen.label) },
-                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                icon = { Icon(item.icon, contentDescription = item.label) },
+                label = { Text(item.label) },
+                selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                 onClick = {
-                    navController.navigate(screen.route) {
+                    navController.navigate(item.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

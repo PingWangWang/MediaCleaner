@@ -8,10 +8,12 @@ import com.photocleaner.core.database.converter.ListTypeConverter
 import com.photocleaner.core.database.dao.DuplicateGroupDao
 import com.photocleaner.core.database.dao.ImageDao
 import com.photocleaner.core.database.dao.RecycleDao
+import com.photocleaner.core.database.dao.ScanCheckpointDao
 import com.photocleaner.core.database.entity.DuplicateGroupEntity
 import com.photocleaner.core.database.entity.GroupMemberEntity
 import com.photocleaner.core.database.entity.ImageItemEntity
 import com.photocleaner.core.database.entity.RecycleItemEntity
+import com.photocleaner.core.database.entity.ScanCheckpointEntity
 
 /**
  * Room database for the PhotoCleaner core database module.
@@ -25,33 +27,25 @@ import com.photocleaner.core.database.entity.RecycleItemEntity
  * - [DuplicateGroupEntity]    — duplicate/similar-image groups
  * - [GroupMemberEntity]       — many-to-many join between groups and images
  * - [RecycleItemEntity]       — soft-deleted images in the recycle area
+ * - [ScanCheckpointEntity]    — scan progress checkpoint for resume
  */
 @Database(
     entities = [
         ImageItemEntity::class,
         DuplicateGroupEntity::class,
         GroupMemberEntity::class,
-        RecycleItemEntity::class
+        RecycleItemEntity::class,
+        ScanCheckpointEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    /**
-     * DAO for image CRUD and bucket-based candidate queries.
-     */
     abstract fun imageDao(): ImageDao
-
-    /**
-     * DAO for duplicate-group and group-member operations.
-     */
     abstract fun duplicateGroupDao(): DuplicateGroupDao
-
-    /**
-     * DAO for recycle-bin CRUD and expiry purging.
-     */
     abstract fun recycleDao(): RecycleDao
+    abstract fun scanCheckpointDao(): ScanCheckpointDao
 
     companion object {
         /**

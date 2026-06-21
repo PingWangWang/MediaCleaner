@@ -15,10 +15,10 @@ import androidx.room.PrimaryKey
  *
  * @property id Auto-generated primary key.
  * @property groupId Foreign key referencing [DuplicateGroupEntity.id].
- * @property imageId Foreign key referencing [ImageItemEntity.id] (not enforced at DB level
- *                   to avoid circular dependency; integrity is maintained by the repository).
+ * @property imageId Foreign key referencing [ImageItemEntity.id].
  * @property similarity Pairwise similarity between this image and the group's best image.
  * @property isBestImage Whether this member is the designated best image for the group.
+ * @property isUserSelected Whether the user manually selected this image as the one to keep.
  * @property sortOrder Display/priority order within the group (lower = higher priority).
  */
 @Entity(
@@ -32,7 +32,8 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["group_id"])
+        Index(value = ["group_id"]),
+        Index(value = ["group_id", "image_id"], unique = true)
     ]
 )
 data class GroupMemberEntity(
@@ -46,11 +47,14 @@ data class GroupMemberEntity(
     val imageId: Long,
 
     @ColumnInfo(name = "similarity")
-    val similarity: Float,
+    val similarity: Int, // 0-100, matches design document
 
     @ColumnInfo(name = "is_best_image")
-    val isBestImage: Boolean,
+    val isBestImage: Boolean = false,
+
+    @ColumnInfo(name = "user_selected")
+    val userSelected: Boolean = false,
 
     @ColumnInfo(name = "sort_order")
-    val sortOrder: Int
+    val sortOrder: Int = 0
 )

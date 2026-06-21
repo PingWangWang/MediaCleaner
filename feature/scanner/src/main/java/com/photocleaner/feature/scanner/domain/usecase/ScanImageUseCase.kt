@@ -1,16 +1,19 @@
 package com.photocleaner.feature.scanner.domain.usecase
 
+import android.content.Context
+import android.util.Log
 import com.photocleaner.core.common.constant.AppConstants
 import com.photocleaner.core.common.model.ImageItem
+import com.photocleaner.core.common.utils.DeviceClassifier
 import com.photocleaner.feature.scanner.domain.repository.ImageRepository
 import com.photocleaner.feature.scanner.model.ScanProgress
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,11 +23,14 @@ import javax.inject.Singleton
  * 扫描 MediaStore 中的所有图片，计算大小分桶和宽高比分桶，
  * 将结果保存到本地数据库，并通过 [ScanProgress] 向 UI 层报告进度。
  *
+ * 自动检测设备性能等级并据此调整扫描并发数。
+ *
  * @author PhotoCleaner
  */
 @Singleton
 class ScanImageUseCase @Inject constructor(
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    @ApplicationContext private val context: Context
 ) {
 
     companion object {
@@ -37,16 +43,23 @@ class ScanImageUseCase @Inject constructor(
      * @return Flow 发射扫描进度状态
      */
     operator fun invoke(): Flow<ScanProgress> = flow {
-        Timber.tag(TAG).d("Scan started")
+        // ── 1. 设备分级 ────────────────────────────────────────────
+        val deviceTier = DeviceClassifier.classify(context)
+        val recommendedConcurrency = DeviceClassifier.getRecommendedConcurrency(deviceTier)
+        val algorithmLevel = DeviceClassifier.getRecommendedAlgorithmLevel(deviceTier)
 
-        // 1. 发射 STARTED 状态
+        Log.d(TAG, "Device classified: tier=$deviceTier, concurrency=$recommendedConcurrency, " +
+                "algorithm=$algorithmLevel")
+        Log.d(TAG, "Scan started")
+
+        // 2. 发射 STARTED 状态
         emit(ScanProgress.STARTED)
 
         val allImages = mutableListOf<ImageItem>()
         var scannedCount = 0
 
         try {
-            // 2. 从 MediaStore 扫描所有图片
+            // 3. 从 MediaStore 扫描所有图片
             val imageFlow = imageRepository.scanAllImages()
 
             // 收集所有图片到列表以便计算总数
@@ -56,10 +69,15 @@ class ScanImageUseCase @Inject constructor(
             }
 
             val totalCount = tempList.size
-            Timber.tag(TAG).d("Total images found: $totalCount")
+            Log.d(TAG, "Total images found: $totalCount")
 
-            // 3. 分批处理：计算分桶并保存
+            // 4. 分批处理：计算分桶并保存，使用设备推荐并发策略
             val processedImages = mutableListOf<ImageItem>()
+
+            // 根据设备等级决定每次处理的批大小
+            val batchSize = AppConstants.SCAN_CHUNK_SIZE.coerceAtMost(
+                recommendedConcurrency * 100
+            )
 
             for ((index, image) in tempList.withIndex()) {
                 // 计算大小分桶 (log2)
@@ -74,8 +92,8 @@ class ScanImageUseCase @Inject constructor(
                 processedImages.add(processedImage)
                 scannedCount++
 
-                // 每处理一批就发射进度并保存
-                if (processedImages.size >= AppConstants.SCAN_CHUNK_SIZE ||
+                // 每处理一批就发射进度并保存（根据设备调整批次大小）
+                if (processedImages.size >= batchSize ||
                     index == tempList.lastIndex
                 ) {
                     emit(ScanProgress.SCANNING(scannedCount, totalCount))
@@ -84,16 +102,17 @@ class ScanImageUseCase @Inject constructor(
                 }
             }
 
-            // 4. 保存剩余的图片
+            // 5. 保存剩余的图片
             if (processedImages.isNotEmpty()) {
                 saveBatch(processedImages)
             }
 
-            Timber.tag(TAG).d("Scan completed: $totalCount images")
+            Log.d(TAG, "Scan completed: $totalCount images (tier=$deviceTier, " +
+                    "concurrency=$recommendedConcurrency)")
             emit(ScanProgress.COMPLETED(totalCount = totalCount, newCount = totalCount))
 
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Scan failed after scanning $scannedCount images")
+            Log.e(TAG, "Scan failed after scanning $scannedCount images", e)
             emit(ScanProgress.ERROR(e.message ?: "Unknown error during scan"))
         }
     }.flowOn(Dispatchers.Default)

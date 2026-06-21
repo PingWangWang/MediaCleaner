@@ -14,28 +14,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.photocleaner.core.common.model.DuplicateGroup
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.photocleaner.core.common.model.ImageItem
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
-    groupId: Long,
-    onBack: () -> Unit,
-    onDelete: (List<Long>) -> Unit
+    viewModel: DetailViewModel = hiltViewModel(),
+    onBack: () -> Unit
 ) {
-    var selectedImageIds by remember { mutableStateOf(setOf<Long>()) }
-    var bestImageId by remember { mutableStateOf<Long?>(null) }
+    val images by viewModel.images.collectAsState()
+    val selectedImageIds by viewModel.selectedImageIds.collectAsState()
+    val bestImageId by viewModel.bestImageId.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var showDeleteConfirm by remember { mutableStateOf(false) }
-
-    // Mock data for preview
-    val mockImages = remember {
-        listOf(
-            ImageItem(id = 1, uri = "", name = "IMG_001.jpg", size = 1024 * 500, modifyTime = System.currentTimeMillis()),
-            ImageItem(id = 2, uri = "", name = "IMG_001(1).jpg", size = 1024 * 500, modifyTime = System.currentTimeMillis()),
-            ImageItem(id = 3, uri = "", name = "IMG_001(2).jpg", size = 1024 * 500, modifyTime = System.currentTimeMillis()),
-        )
-    }
 
     if (showDeleteConfirm) {
         AlertDialog(
@@ -48,7 +42,25 @@ fun DetailScreen(
                 Button(
                     onClick = {
                         showDeleteConfirm = false
-                        onDelete(selectedImageIds.toList())
+                        scope.launch {
+                            viewModel.deleteSelected().collect { result ->
+                                when (result) {
+                                    is com.photocleaner.feature.fileops.model.DeleteResult.SUCCESS -> {
+                                        snackbarHostState.showSnackbar(
+                                            message = "已删除 ${result.savedBytes}",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                    is com.photocleaner.feature.fileops.model.DeleteResult.FAILED -> {
+                                        snackbarHostState.showSnackbar(
+                                            message = "删除失败：${result.errorMessage}",
+                                            duration = SnackbarDuration.Long
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -68,7 +80,7 @@ fun DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("图片详情") },
+                title = { Text("图片详情 (${images.size}张)") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
@@ -99,7 +111,7 @@ fun DetailScreen(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                bestImageId = selectedImageIds.firstOrNull()
+                                viewModel.setBestImage(selectedImageIds.first())
                             },
                             modifier = Modifier.weight(1f)
                         ) {
@@ -121,30 +133,34 @@ fun DetailScreen(
                     }
                 }
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(mockImages) { image ->
-                ImageDetailCard(
-                    image = image,
-                    isSelected = image.id in selectedImageIds,
-                    isBestImage = image.id == bestImageId,
-                    onToggleSelect = {
-                        selectedImageIds = if (image.id in selectedImageIds) {
-                            selectedImageIds - image.id
-                        } else {
-                            selectedImageIds + image.id
-                        }
-                    }
-                )
+        if (images.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("未找到图片", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(images, key = { it.id }) { image ->
+                    ImageDetailCard(
+                        image = image,
+                        isSelected = image.id in selectedImageIds,
+                        isBestImage = image.id == bestImageId,
+                        onToggleSelect = { viewModel.toggleSelection(image.id) }
+                    )
+                }
             }
         }
     }
@@ -224,6 +240,13 @@ private fun ImageDetailCard(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (image.width != null && image.height != null) {
+                Text(
+                    text = "${image.width}x${image.height}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }
