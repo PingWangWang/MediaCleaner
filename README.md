@@ -275,33 +275,33 @@ sequenceDiagram
 
     User->>UI: 点击"开始扫描"
     UI->>VM: startScan()
-    VM->>UC: ScanImageUseCase()
+    VM->>UC: ScanImageUseCase
     UC->>DB: 读取已缓存哈希
     UC->>FS: MediaStore 扫描图片
-    FS-->>UC: Flow&lt;ImageItem&gt;
-    UC->>DB: 保存图片元数据 + 分桶
-    UC-->>VM: Flow&lt;ScanProgress&gt;
-    VM-->>UI: StateFlow&lt;ScanUiState&gt;
+    FS-->>UC: Flow ImageItem
+    UC->>DB: 保存图片 + 分桶
+    UC-->>VM: Flow ScanProgress
+    VM-->>UI: StateFlow ScanUiState
     UI-->>User: 显示扫描进度
 
-    User->>UI: 扫描完成
-    UI->>VM: startDetection()
-    VM->>UC: DetectDuplicateUseCase()
-    UC->>DB: 按分桶查询候选图片
-    UC->>UC: Layer 2~5 流水线处理
-    UC-->>VM: Flow&lt;DuplicateGroup&gt;
+    Note over UC,VM: 扫描完成
+    UI->>VM: startDetection
+    VM->>UC: DetectDuplicateUseCase
+    UC->>DB: 按分桶查询候选
+    UC->>UC: 5层流水线处理
+    UC-->>VM: Flow DuplicateGroup
     VM-->>UI: 导航到结果页
-    UI-->>User: 展示重复组列表
+    UI-->>User: 展示重复组
 
     User->>UI: 选择要删除的图片
-    UI->>VM: deleteSelected()
-    VM->>UC: DeleteImageUseCase()
-    UC->>FS: 复制到回收站目录
-    UC->>DB: 插入回收站记录
+    UI->>VM: deleteSelected
+    VM->>UC: DeleteImageUseCase
+    UC->>FS: 复制到回收站
+    UC->>DB: 插入回收记录
     UC->>FS: 删除原始文件
     UC-->>VM: DeleteResult
-    VM-->>UI: Snackbar "已删除 (可撤销)"
-    UI-->>User: 5秒内点击撤销
+    VM-->>UI: Snackbar(已删除)
+    Note over UI,User: 5秒倒计时可撤销
 ```
 
 ### 设备智能分级决策
