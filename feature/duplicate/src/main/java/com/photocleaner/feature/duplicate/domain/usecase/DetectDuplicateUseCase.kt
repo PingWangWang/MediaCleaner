@@ -133,10 +133,31 @@ class DetectDuplicateUseCase @Inject constructor(
                     if (group.size < 2) continue
 
                     // ──────────────────────────────────────────────
+                    // Layer 4: pHash 边界检查（灰色地带图片重评估）
+                    // ──────────────────────────────────────────────
+                    val initialGroupType = determineGroupType(group)
+                    val refinedGroup = if (initialGroupType == GroupType.MEDIUM_SIMILARITY) {
+                        refineWithPHash(group)
+                    } else {
+                        group
+                    }
+                    if (refinedGroup.size < 2) continue
+
+                    // ──────────────────────────────────────────────
+                    // Layer 5: ORB 精细化匹配（三条件门控）
+                    // ──────────────────────────────────────────────
+                    val finalGroup = if (shouldEnableOrbCheckForGroup(refinedGroup)) {
+                        refineWithOrb(refinedGroup)
+                    } else {
+                        refinedGroup
+                    }
+                    if (finalGroup.size < 2) continue
+
+                    // ──────────────────────────────────────────────
                     // 确定组类型并排序
                     // ──────────────────────────────────────────────
-                    val groupType = determineGroupType(group)
-                    val sortedGroup = group.sortedByDescending {
+                    val groupType = determineGroupType(finalGroup)
+                    val sortedGroup = finalGroup.sortedByDescending {
                         (it.width ?: 0) * (it.height ?: 0)
                     }
                     val bestImage = sortedGroup.first()
@@ -147,7 +168,7 @@ class DetectDuplicateUseCase @Inject constructor(
                         DuplicateGroup(
                             groupId = groupIdCounter.incrementAndGet(),
                             images = sortedGroup,
-                            similarity = computeGroupSimilarity(group),
+                            similarity = computeGroupSimilarity(finalGroup),
                             groupType = groupType,
                             bestImage = bestImage,
                             canDeleteImages = canDeleteImages,
@@ -261,6 +282,82 @@ class DetectDuplicateUseCase @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * 使用 pHash 对灰色地带图片组进行边界检查。
+     *
+     * 当 dHash 判定为中等相似时（汉明距离 11~20），计算 pHash 重新验证：
+     * - 若 pHash 汉明距离 <= 10，提升为高度相似
+     * - 否则保持中等相似分类
+     */
+    private fun refineWithPHash(group: List<ImageItem>): List<ImageItem> {
+        // 为缺少 pHash 的图片计算 pHash
+        val imagesWithPHash = group.map { image ->
+            if (image.pHash != null) {
+                image
+            } else {
+                val bitmap = loadBitmap(image.path)
+                if (bitmap != null) {
+                    val hash = pHashCalculator.calculateHash(bitmap)
+                    image.copy(pHash = hash)
+                } else {
+                    image
+                }
+            }
+        }
+
+        val validImages = imagesWithPHash.filter { it.pHash != null && it.pHash!!.length == 64 }
+        if (validImages.size < 2) return group
+
+        // 使用 pHash 重新计算两两之间的汉明距离
+        // 若任意两张图片的 pHash 距离 <= 10，将它们保留在同一组
+        val keptIds = mutableSetOf<Long>()
+        for (i in validImages.indices) {
+            for (j in i + 1 until validImages.size) {
+                val hash1 = validImages[i].pHash ?: continue
+                val hash2 = validImages[j].pHash ?: continue
+                val distance = hammingDistanceMatcher.computeHammingDistance(hash1, hash2)
+                if (distance <= HIGH_SIMILARITY_THRESHOLD) {
+                    keptIds.add(validImages[i].id)
+                    keptIds.add(validImages[j].id)
+                }
+            }
+        }
+
+        // 至少引入一张图片才进行过滤
+        if (keptIds.size < 2) return group
+
+        return group.filter { it.id in keptIds }
+    }
+
+    /**
+     * 判断整组图片是否应启用 ORB 精细化匹配。
+     *
+     * 检查组内所有两两距离，若至少有任意一对处于灰色地带，
+     * 且同时满足图片数量与尺寸比例条件，则启用 ORB 检查。
+     */
+    private fun shouldEnableOrbCheckForGroup(group: List<ImageItem>): Boolean {
+        if (group.size < 2 || group.size > ORB_MAX_GROUP_SIZE) return false
+
+        // 检查是否至少有一对在灰色地带
+        var hasGrayZone = false
+        for (i in group.indices) {
+            for (j in i + 1 until group.size) {
+                val hash1 = group[i].dHash ?: continue
+                val hash2 = group[j].dHash ?: continue
+                val distance = hammingDistanceMatcher.computeHammingDistance(hash1, hash2)
+                if (distance in ORB_GRAY_ZONE_LOWER..ORB_GRAY_ZONE_UPPER) {
+                    hasGrayZone = true
+                    break
+                }
+            }
+            if (hasGrayZone) break
+        }
+        if (!hasGrayZone) return false
+
+        // 条件三：尺寸比例检查
+        return shouldEnableOrbCheck(0, group.size, group)
     }
 
     /**

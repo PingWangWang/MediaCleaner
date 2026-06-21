@@ -20,6 +20,21 @@ object HashUtils {
     private const val SHA256_ALGORITHM = "SHA-256"
 
     /**
+     * 计算字节数组的 MD5 校验值。
+     *
+     * @param data 输入字节数组
+     * @return 32 位小写 MD5 十六进制字符串
+     */
+    fun md5(data: ByteArray): String {
+        return try {
+            val digest = MessageDigest.getInstance(MD5_ALGORITHM)
+            bytesToHex(digest.digest(data))
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /**
      * 计算文件的 MD5 校验值。
      *
      * 以 8KB 缓冲分块读取文件，适用于大文件计算。

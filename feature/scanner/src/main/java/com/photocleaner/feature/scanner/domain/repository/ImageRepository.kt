@@ -54,7 +54,7 @@ interface ImageRepository {
      * @param ratioBucket 宽高比分桶索引
      * @return 匹配的图片列表
      */
-    fun getImagesByBuckets(sizeBucket: Int, ratioBucket: Int): List<ImageItem>
+    suspend fun getImagesByBuckets(sizeBucket: Int, ratioBucket: Int): List<ImageItem>
 
     /**
      * 获取尚未计算哈希的图片。
@@ -62,7 +62,7 @@ interface ImageRepository {
      * @param limit 返回的最大数量
      * @return 未计算哈希的图片列表
      */
-    fun getUncalculatedImages(limit: Int): List<ImageItem>
+    suspend fun getUncalculatedImages(limit: Int): List<ImageItem>
 
     /**
      * 更新指定图片的哈希指纹。

@@ -66,19 +66,15 @@ class ImageRepositoryImpl @Inject constructor(
         imageDao.getById(id)?.toImageItem()
     }
 
-    override fun getImagesByBuckets(sizeBucket: Int, ratioBucket: Int): List<ImageItem> {
-        // Note: This runs a suspend DAO call; to keep the interface non-suspend
-        // we use runBlocking on IO in a coroutine. However, a cleaner approach
-        // would be to make the DAO calls synchronous. We'll use a flow-based
-        // approach to remain idiomatic.
-        return kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+    override suspend fun getImagesByBuckets(sizeBucket: Int, ratioBucket: Int): List<ImageItem> {
+        return withContext(Dispatchers.IO) {
             imageDao.getImagesByBuckets(sizeBucket, ratioBucket)
                 .map { it.toImageItem() }
         }
     }
 
-    override fun getUncalculatedImages(limit: Int): List<ImageItem> {
-        return kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+    override suspend fun getUncalculatedImages(limit: Int): List<ImageItem> {
+        return withContext(Dispatchers.IO) {
             imageDao.getUncalculatedImages(limit)
                 .map { it.toImageItem() }
         }

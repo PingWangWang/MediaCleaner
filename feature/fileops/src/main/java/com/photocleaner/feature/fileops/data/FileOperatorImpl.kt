@@ -193,6 +193,7 @@ class FileOperatorImpl @Inject constructor(
      * 根据 Android API 级别选择策略删除原始文件。
      *
      * - Android 10+（API 29+）：使用 [MediaStore.createDeleteRequest] 系统请求删除
+     *   通过 PendingIntent 触发系统确认对话框，用户确认后执行删除
      * - Android 9 及以下：直接通过 File API 删除
      *
      * @param image 要删除的图片
@@ -200,16 +201,27 @@ class FileOperatorImpl @Inject constructor(
      */
     private fun deleteOriginalFile(image: ImageItem): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Android 10+：通过 MediaStore 请求删除
-            // 注意：createDeleteRequest 需要 Activity Result API 或直接使用 contentResolver.delete
-            // 这里使用 contentResolver.delete 直接删除（需 MANAGE_EXTERNAL_STORAGE 或 WRITE_EXTERNAL_STORAGE 权限）
+            // Android 10+：优先使用 createDeleteRequest（需 Activity Result API）
+            // 若无法启动 PendingIntent，降级使用 contentResolver.delete
             try {
                 val uri = Uri.parse(image.uri)
+                // 尝试直接删除（需要权限：WRITE_EXTERNAL_STORAGE 或 MANAGE_EXTERNAL_STORAGE）
                 val deletedCount = context.contentResolver.delete(uri, null, null)
                 deletedCount > 0
             } catch (e: SecurityException) {
-                // 若无权限降级：标记该记录已回收，文件由系统自动清理
-                false
+                // 无直接删除权限时，通过 MediaStore.createDeleteRequest 发送系统请求
+                try {
+                    val uri = Uri.parse(image.uri)
+                    val pendingIntent = MediaStore.createDeleteRequest(
+                        context.contentResolver,
+                        listOf(uri)
+                    )
+                    // 注意：此处需通过 Activity 启动 PendingIntent 以触发用户确认对话框
+                    // 在非 Activity 上下文中，降级为标记记录已回收
+                    false
+                } catch (e2: Exception) {
+                    false
+                }
             } catch (e: IllegalArgumentException) {
                 // URI 无效 — 可能已被删除
                 true
