@@ -94,7 +94,7 @@ fun PermissionGate(content: @Composable () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(progress = 0f)
         }
     }
 }
