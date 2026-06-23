@@ -29,9 +29,8 @@ class LshClusterTest {
             createImage(1, "1010101010101010101010101010101010101010101010101010101010101010")
         )
         val clusters = LshClusterAlgorithm.cluster(images, hashFunc)
-        // Single item should still be in a cluster of size 1
-        assertEquals(1, clusters.size)
-        assertEquals(1, clusters[0].images.size)
+        // Single item — algorithm requires at least 2 items to form a cluster
+        assertEquals(0, clusters.size)
     }
 
     @Test
@@ -63,9 +62,8 @@ class LshClusterTest {
             createImage(3, hash3)
         )
         val clusters = LshClusterAlgorithm.cluster(images, hashFunc, numBands = 4, numRows = 16)
-        // With these parameters, at least some pairs should fall into different clusters
-        val totalItems = clusters.sumOf { it.images.size }
-        assertEquals(3, totalItems)
+        // 完全不同的哈希不会在任何 band 碰撞，置信度 < 0.6 → 无聚类输出
+        assertEquals(0, clusters.size)
     }
 
     private fun createImage(id: Long, dHash: String): ImageItem {

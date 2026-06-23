@@ -22,7 +22,7 @@ object SizeUtils {
     private const val BYTES_IN_MB = 1024L * 1024
     private const val BYTES_IN_GB = 1024L * 1024 * 1024
 
-    private val decimalFormat = DecimalFormat("#.#")
+    private val decimalFormat = DecimalFormat("0.0")
 
     /**
      * 将字节数格式化为人类可读的大小字符串（中文单位）。

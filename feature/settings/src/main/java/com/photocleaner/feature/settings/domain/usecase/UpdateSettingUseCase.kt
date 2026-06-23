@@ -12,31 +12,34 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UpdateSettingUseCase @Inject constructor(
-    private val settingsPreferences: SettingsPreferences
+open class UpdateSettingUseCase @Inject constructor(
+    private val settingsPreferences: SettingsPreferences?
 ) {
-    suspend operator fun invoke(key: String, value: Any) {
+    open suspend operator fun invoke(key: String, value: Any) {
+        val prefs = requireNotNull(settingsPreferences) {
+            "UpdateSettingUseCase: SettingsPreferences must not be null"
+        }
         when (key) {
-            "scanConcurrency" -> settingsPreferences.setScanConcurrency(value as Int)
-            "highPrecisionEnabled" -> settingsPreferences.setHighPrecisionEnabled(value as Boolean)
-            "minImageSizeKb" -> settingsPreferences.setMinImageSizeKb(value as Int)
-            "ignoreScreenshots" -> settingsPreferences.setIgnoreScreenshots(value as Boolean)
-            "ignoreGif" -> settingsPreferences.setIgnoreGif(value as Boolean)
-            "similarityThreshold" -> settingsPreferences.setSimilarityThreshold(value as Int)
-            "autoRetainBest" -> settingsPreferences.setAutoRetainBest(value as Boolean)
-            "confirmBeforeDelete" -> settingsPreferences.setConfirmBeforeDelete(value as Boolean)
-            "recycleBinEnabled" -> settingsPreferences.setRecycleBinEnabled(value as Boolean)
-            "autoClearRecycle" -> settingsPreferences.setAutoClearRecycle(value as Boolean)
-            "autoClearRecycleDays" -> settingsPreferences.setAutoClearRecycleDays(value as Int)
-            "autoCheckUpdate" -> settingsPreferences.setAutoCheckUpdate(value as Boolean)
-            "scanOnWifiOnly" -> settingsPreferences.setScanOnWifiOnly(value as Boolean)
-            "themeMode" -> settingsPreferences.setThemeMode(value as String)
-            "language" -> settingsPreferences.setLanguage(value as String)
-            "notificationEnabled" -> settingsPreferences.setNotificationEnabled(value as Boolean)
-            "shakeToFeedback" -> settingsPreferences.setShakeToFeedback(value as Boolean)
-            "privacyLock" -> settingsPreferences.setPrivacyLock(value as Boolean)
-            "privacyPolicyAccepted" -> settingsPreferences.setPrivacyPolicyAccepted(value as Boolean)
-            "deviceTier" -> settingsPreferences.setDeviceTier(value as String)
+            "scanConcurrency" -> prefs.setScanConcurrency(value as Int)
+            "highPrecisionEnabled" -> prefs.setHighPrecisionEnabled(value as Boolean)
+            "minImageSizeKb" -> prefs.setMinImageSizeKb(value as Int)
+            "ignoreScreenshots" -> prefs.setIgnoreScreenshots(value as Boolean)
+            "ignoreGif" -> prefs.setIgnoreGif(value as Boolean)
+            "similarityThreshold" -> prefs.setSimilarityThreshold(value as Int)
+            "autoRetainBest" -> prefs.setAutoRetainBest(value as Boolean)
+            "confirmBeforeDelete" -> prefs.setConfirmBeforeDelete(value as Boolean)
+            "recycleBinEnabled" -> prefs.setRecycleBinEnabled(value as Boolean)
+            "autoClearRecycle" -> prefs.setAutoClearRecycle(value as Boolean)
+            "autoClearRecycleDays" -> prefs.setAutoClearRecycleDays(value as Int)
+            "autoCheckUpdate" -> prefs.setAutoCheckUpdate(value as Boolean)
+            "scanOnWifiOnly" -> prefs.setScanOnWifiOnly(value as Boolean)
+            "themeMode" -> prefs.setThemeMode(value as String)
+            "language" -> prefs.setLanguage(value as String)
+            "notificationEnabled" -> prefs.setNotificationEnabled(value as Boolean)
+            "shakeToFeedback" -> prefs.setShakeToFeedback(value as Boolean)
+            "privacyLock" -> prefs.setPrivacyLock(value as Boolean)
+            "privacyPolicyAccepted" -> prefs.setPrivacyPolicyAccepted(value as Boolean)
+            "deviceTier" -> prefs.setDeviceTier(value as String)
             else -> throw IllegalArgumentException("Unknown settings key: $key")
         }
     }

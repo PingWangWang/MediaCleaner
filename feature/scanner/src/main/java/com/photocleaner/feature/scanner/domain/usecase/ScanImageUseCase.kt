@@ -35,7 +35,7 @@ import javax.inject.Singleton
  * @author PhotoCleaner
  */
 @Singleton
-class ScanImageUseCase @Inject constructor(
+open class ScanImageUseCase @Inject constructor(
     private val imageRepository: ImageRepository,
     @ApplicationContext private val context: Context
 ) {
@@ -49,7 +49,7 @@ class ScanImageUseCase @Inject constructor(
      *
      * @return Flow 发射扫描进度状态
      */
-    operator fun invoke(): Flow<ScanProgress> = flow {
+    open operator fun invoke(): Flow<ScanProgress> = flow {
         // ── 1. 设备分级 ────────────────────────────────────────────
         val deviceTier = DeviceClassifier.classify(context)
         val recommendedConcurrency = DeviceClassifier.getRecommendedConcurrency(deviceTier)

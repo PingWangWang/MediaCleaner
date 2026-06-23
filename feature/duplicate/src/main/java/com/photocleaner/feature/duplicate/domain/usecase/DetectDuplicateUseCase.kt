@@ -40,7 +40,7 @@ import javax.inject.Singleton
  * @author PhotoCleaner
  */
 @Singleton
-class DetectDuplicateUseCase @Inject constructor(
+open class DetectDuplicateUseCase @Inject constructor(
     private val dHashCalculator: DHashCalculator,
     private val pHashCalculator: PHashCalculator,
     private val hammingDistanceMatcher: HammingDistanceMatcher,
@@ -108,7 +108,7 @@ class DetectDuplicateUseCase @Inject constructor(
      * @param images 待检测的图片列表
      * @return 发射 [DuplicateGroup] 的流
      */
-    operator fun invoke(images: List<ImageItem>): Flow<DuplicateGroup> = flow {
+    open operator fun invoke(images: List<ImageItem>): Flow<DuplicateGroup> = flow {
         if (images.size < 2) return@flow
 
         // ──────────────────────────────────────────────────────────
