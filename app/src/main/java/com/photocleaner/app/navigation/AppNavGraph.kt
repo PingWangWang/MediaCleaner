@@ -7,9 +7,12 @@
  */
 package com.photocleaner.app.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -34,8 +37,6 @@ import androidx.navigation.navArgument
 import com.photocleaner.app.ui.detail.DetailScreen
 import com.photocleaner.app.ui.home.HomeScreen
 import com.photocleaner.app.ui.recyclebin.RecycleBinScreen
-import com.photocleaner.app.ui.result.ResultScreen
-import com.photocleaner.app.ui.scan.ScanScreen
 import com.photocleaner.app.ui.settings.SettingsScreen
 import com.photocleaner.app.utils.PermissionGate
 
@@ -55,13 +56,12 @@ private data class BottomNavItem(
 /** 底部导航栏显示的四个主屏幕 */
 private val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.HOME, "首页", Icons.Default.Home),
-    BottomNavItem(NavRoutes.SCAN, "结果", Icons.Default.ClearAll),
     BottomNavItem(NavRoutes.RECYCLE_BIN, "回收站", Icons.Default.Delete),
     BottomNavItem(NavRoutes.SETTINGS, "设置", Icons.Default.Settings)
 )
 
-/** 不显示底部导航栏的路由集合 */
-private val routesWithoutBottomBar = setOf(NavRoutes.RESULT, NavRoutes.DETAIL)
+/** 不显示底部导航栏的路由集合（仅详情页） */
+private val routesWithoutBottomBar = setOf(NavRoutes.DETAIL)
 
 @Composable
 fun AppNavGraph() {
@@ -85,44 +85,22 @@ fun AppNavGraph() {
             startDestination = NavRoutes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // ---------- 主页 ----------
-            composable(NavRoutes.HOME) {
+            // ---------- 首页（扫描、检测、结果展示三合一） ----------
+            composable(NavRoutes.HOME,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
+            ) {
                 HomeScreen(
-                    onStartScan = { navController.navigate(NavRoutes.SCAN) }
-                )
-            }
-
-            // ---------- 扫描页 ----------
-            composable(NavRoutes.SCAN) {
-                ScanScreen(
-                    onScanComplete = { groups ->
-                        // 将扫描结果存入共享单例，跳转结果页
-                        ScanResultHolder.groups = groups
-                        navController.navigate(NavRoutes.RESULT) {
-                            // 移除扫描页，避免按返回键回到扫描状态
-                            popUpTo(NavRoutes.SCAN) { inclusive = true }
-                        }
-                    },
-                    onCancel = { navController.popBackStack() }
-                )
-            }
-
-            // ---------- 结果页 ----------
-            composable(NavRoutes.RESULT) {
-                ResultScreen(
-                    onItemClick = { groupId ->
-                        // 找到被点击的分组，存入共享单例供详情页使用
-                        ScanResultHolder.selectedGroup =
-                            ScanResultHolder.groups.firstOrNull { it.groupId == groupId }
-                        navController.navigate(NavRoutes.detail(groupId))
-                    },
-                    onBack = { navController.popBackStack() }
+                    onOpenRecycleBin = { navController.navigate(NavRoutes.RECYCLE_BIN) },
+                    onOpenSettings = { navController.navigate(NavRoutes.SETTINGS) }
                 )
             }
 
             // ---------- 详情页 ----------
             composable(
                 route = NavRoutes.DETAIL,
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
                 arguments = listOf(
                     navArgument("groupId") { type = NavType.LongType }
                 )
@@ -133,14 +111,20 @@ fun AppNavGraph() {
             }
 
             // ---------- 回收站 ----------
-            composable(NavRoutes.RECYCLE_BIN) {
+            composable(NavRoutes.RECYCLE_BIN,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
+            ) {
                 RecycleBinScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
 
             // ---------- 设置页 ----------
-            composable(NavRoutes.SETTINGS) {
+            composable(NavRoutes.SETTINGS,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
+            ) {
                 SettingsScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )

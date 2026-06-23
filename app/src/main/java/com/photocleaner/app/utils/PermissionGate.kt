@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2025 PhotoCleaner
  *
- * 权限门组件 — 简化版
+ * 权限与隐私协议门组件
  *
- * 启动时自动请求存储权限：
- * - 授予 → 自动进入首页
- * - 拒绝 → 自动退出应用
- * - 下次启动再次询问，不记录永久拒绝状态
+ * 启动时依次处理：
+ * 1. 请求存储权限 → 拒绝则退出
+ * 2. 检查隐私协议是否已同意 → 未同意则展示同意页面
+ * 3. 全部通过后渲染 [content]
  *
  * @author PhotoCleaner
  */
@@ -20,33 +20,39 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.map
+import com.photocleaner.app.utils.AgreementScreen
+import com.photocleaner.app.utils.PrivacyPolicyDialog
+import com.photocleaner.app.utils.TermsOfServiceDialog
+import kotlinx.coroutines.launch
+
+/** 使用与 SettingsPreferences 相同的 DataStore 文件 */
+private val android.content.Context.agreementDataStore by preferencesDataStore(name = "photo_cleaner_settings")
+
+/** 隐私协议已同意的 Key */
+private val PRIVACY_ACCEPTED_KEY = booleanPreferencesKey("privacy_policy_accepted")
 
 /**
- * 权限门组件。
+ * 权限与隐私协议门组件。
  *
- * 启动时自动检测并请求存储权限：
- * - 已授予 → 直接渲染 [content]
- * - 未授予 → 自动弹出系统权限对话框
- * - 用户授予 → 渲染 [content]
- * - 用户拒绝 → 退出应用
- *
- * 不检测永久拒绝状态，每次启动都重新询问。
+ * 启动时自动执行：
+ * 1. 检查并请求存储权限
+ * 2. 检查隐私协议是否已同意
+ * 3. 全部通过后渲染 [content]
  */
 @Composable
 fun PermissionGate(content: @Composable () -> Unit) {
     val context = LocalContext.current
 
-    // 确定要请求的权限
+    // ── 权限状态 ──────────────────────────────────────────────
     val permission = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
@@ -55,18 +61,14 @@ fun PermissionGate(content: @Composable () -> Unit) {
         }
     }
 
-    // 当前权限状态
     var hasPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, permission) ==
                     android.content.pm.PackageManager.PERMISSION_GRANTED
         )
     }
-
-    // 是否已尝试过请求
     var hasRequested by remember { mutableStateOf(false) }
 
-    // 权限请求 launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -74,27 +76,70 @@ fun PermissionGate(content: @Composable () -> Unit) {
         if (granted) {
             hasPermission = true
         } else {
-            // 用户拒绝 → 退出应用
             (context as? Activity)?.finish()
         }
     }
 
-    // 未授予且还未请求过 → 自动发起请求
     LaunchedEffect(Unit) {
         if (!hasPermission && !hasRequested) {
             permissionLauncher.launch(permission)
         }
     }
 
-    if (hasPermission) {
-        content()
-    } else {
-        // 等待权限请求结果时显示加载指示
+    // ── 隐私协议状态 ───────────────────────────────────────────
+    val agreementAccepted by context.agreementDataStore.data
+        .map { it[PRIVACY_ACCEPTED_KEY] ?: false }
+        .collectAsState(initial = null)
+
+    // ── 等待权限结果 ───────────────────────────────────────────
+    if (!hasPermission) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(progress = 0f)
         }
+        return
     }
+
+    // ── 等待协议加载 ───────────────────────────────────────────
+    if (agreementAccepted == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(progress = 0f)
+        }
+        return
+    }
+
+    // ── 协议未同意 ────────────────────────────────────────────
+    if (!agreementAccepted!!) {
+        var showPrivacy by remember { mutableStateOf(false) }
+        var showTerms by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+
+        if (showPrivacy) {
+            PrivacyPolicyDialog(onDismiss = { showPrivacy = false })
+        }
+        if (showTerms) {
+            TermsOfServiceDialog(onDismiss = { showTerms = false })
+        }
+
+        AgreementScreen(
+            onAccept = {
+                scope.launch {
+                    context.agreementDataStore.edit { prefs ->
+                        prefs[PRIVACY_ACCEPTED_KEY] = true
+                    }
+                }
+            },
+            onShowPrivacy = { showPrivacy = true },
+            onShowTerms = { showTerms = true }
+        )
+        return
+    }
+
+    // ── 全部通过 → 渲染内容 ───────────────────────────────────
+    content()
 }

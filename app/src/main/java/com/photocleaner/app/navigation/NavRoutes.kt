@@ -15,8 +15,6 @@ package com.photocleaner.app.navigation
  */
 object NavRoutes {
     const val HOME = "home"
-    const val SCAN = "scan"
-    const val RESULT = "result"
     const val DETAIL = "detail/{groupId}"
     const val RECYCLE_BIN = "recycle_bin"
     const val SETTINGS = "settings"
