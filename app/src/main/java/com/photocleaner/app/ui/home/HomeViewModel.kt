@@ -66,6 +66,15 @@ class HomeViewModel @Inject constructor(
     fun cancelDetection() {
         detectionJob?.cancel()
         _paused.value = false
+        // 保存检测进度到扫描记录
+        val currentState = _state.value
+        if (currentState is HomeUiState.Detecting && currentState.foundGroups > 0) {
+            viewModelScope.launch {
+                ScanRecordStore.updateLastRecord(context) {
+                    it.copy(duplicateGroups = currentState.foundGroups, hasDetected = true)
+                }
+            }
+        }
         _state.value = HomeUiState.ScanCompleted(lastScanTotalCount)
     }
 

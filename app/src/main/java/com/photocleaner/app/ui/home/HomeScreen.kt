@@ -69,12 +69,14 @@ fun HomeScreen(
                     onStartDetection = { viewModel.startDetection() },
                     onGoHome = { viewModel.goHome() }
                 )
-                is HomeUiState.Detecting -> DetectingContent(
-                    s,
-                    onPause = { viewModel.pauseDetection() },
-                    onResume = { viewModel.resumeDetection() },
-                    onCancel = { viewModel.cancelDetection() }
-                )
+                is HomeUiState.Detecting -> Box(Modifier.weight(1f)) {
+                    DetectingContent(
+                        s,
+                        onPause = { viewModel.pauseDetection() },
+                        onResume = { viewModel.resumeDetection() },
+                        onCancel = { viewModel.cancelDetection() }
+                    )
+                }
                 is HomeUiState.Complete -> CompleteContent(
                     groups = s.groups,
                     selectedIds = selectedIds,
@@ -206,14 +208,13 @@ private fun ScanCompletedContent(totalCount: Int, onStartDetection: () -> Unit, 
 @Composable
 private fun DetectingContent(s: HomeUiState.Detecting, onPause: () -> Unit, onResume: () -> Unit, onCancel: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        if (!s.paused) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
-                CircularProgressIndicator(progress = 0f, modifier = Modifier.fillMaxSize(), strokeWidth = 6.dp)
-                Text("${s.foundGroups}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            }
+        Spacer(Modifier.weight(1f))
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
+            CircularProgressIndicator(progress = if (s.foundGroups > 0) 0.5f else 0f, modifier = Modifier.fillMaxSize(), strokeWidth = 6.dp)
+            Text("${s.foundGroups}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(Modifier.height(8.dp))
-        Text(if (s.paused) "检测已暂停" else "正在检测重复图片...", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        Text(if (s.paused) "检测已暂停 (${s.foundGroups} 组)" else "正在检测重复图片...", fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Text("已发现 ${s.foundGroups} 组重复", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -221,27 +222,23 @@ private fun DetectingContent(s: HomeUiState.Detecting, onPause: () -> Unit, onRe
             OutlinedButton(onClick = onCancel, modifier = Modifier.height(40.dp)) { Text("结束", fontSize = 14.sp) }
         }
 
-        if (s.detectedGroups.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("已检测分组：", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
-            Spacer(Modifier.height(8.dp))
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(s.detectedGroups, key = { it.groupId }) { group ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text("相似度: ${(group.similarity * 100).toInt()}%", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                                Text("${group.images.size} 张图片", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+        Spacer(Modifier.height(16.dp))
+        Text("已检测分组：", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+        Spacer(Modifier.height(8.dp))
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(s.detectedGroups, key = { it.groupId }) { group ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("相似度: ${(group.similarity * 100).toInt()}%", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Text("${group.images.size} 张图片", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-        } else {
-            Spacer(Modifier.weight(1f))
         }
     }
 }

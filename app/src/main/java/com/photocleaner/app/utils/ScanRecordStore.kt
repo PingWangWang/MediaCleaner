@@ -45,7 +45,7 @@ data class ScanRecord(
             duplicateGroups = obj.optInt("dg"),
             timestamp = obj.optLong("ts"),
             hasDetected = obj.optBoolean("hd"),
-            errorMessage = obj.optString("em", null)
+            errorMessage = if (obj.isNull("em")) null else obj.optString("em", "")
         )
 
         fun toJsonArray(records: List<ScanRecord>): String =
