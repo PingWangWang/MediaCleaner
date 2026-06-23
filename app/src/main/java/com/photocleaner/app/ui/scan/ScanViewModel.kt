@@ -25,8 +25,9 @@ import javax.inject.Inject
 /**
  * 扫描页面 ViewModel。
  *
- * 协调全量扫描和重复检测两个用例的执行流程，
- * 通过 [scanState] 向 UI 层报告各阶段进度与最终结果。
+ * 分两步执行：
+ * 1. [startScan]：仅扫描 MediaStore 图片，不执行去重（用户信息安全优先）
+ * 2. [startDetection]：用户手动触发后，从数据库加载图片并执行去重检测
  */
 @HiltViewModel
 class ScanViewModel @Inject constructor(
@@ -39,13 +40,10 @@ class ScanViewModel @Inject constructor(
     val scanState: StateFlow<ScanUiState> = _scanState.asStateFlow()
 
     /**
-     * 启动扫描流程。
+     * 启动扫描流程（仅扫描，不去重）。
      *
-     * 执行顺序：
-     * 1. 调用 [ScanImageUseCase] 全量扫描 MediaStore 图片
-     * 2. 扫描完成后从数据库加载所有图片
-     * 3. 调用 [DetectDuplicateUseCase] 进行重复检测
-     * 4. 收集检测结果并更新状态为 [ScanUiState.Complete]
+     * 扫描完成后进入 [ScanUiState.ScanCompleted] 状态，
+     * 由用户手动调用 [startDetection] 触发重复检测。
      */
     fun startScan() {
         if (_scanState.value !is ScanUiState.Idle) return
@@ -77,7 +75,7 @@ class ScanViewModel @Inject constructor(
                         is ScanProgress.COMPLETED -> {
                             _scanState.value = ScanUiState.Scanning(
                                 progress = 1f,
-                                phase = "正在检测重复图片...",
+                                phase = "扫描完成，等待检测",
                                 scannedCount = progress.totalCount,
                                 totalCount = progress.totalCount,
                                 foundDuplicates = 0
@@ -85,9 +83,7 @@ class ScanViewModel @Inject constructor(
                         }
 
                         is ScanProgress.ERROR -> {
-                            _scanState.value = ScanUiState.Error(
-                                progress.message
-                            )
+                            _scanState.value = ScanUiState.Error(progress.message)
                             return@collect
                         }
                     }
@@ -98,6 +94,34 @@ class ScanViewModel @Inject constructor(
                 )
                 return@launch
             }
+
+            // 扫描完成，进入待检测状态，需要用户手动确认才执行去重
+            val totalCount = when (val state = _scanState.value) {
+                is ScanUiState.Scanning -> state.totalCount
+                else -> 0
+            }
+            _scanState.value = ScanUiState.ScanCompleted(totalCount = totalCount)
+        }
+    }
+
+    /**
+     * 手动触发重复检测。
+     *
+     * 用户确认后从数据库加载图片并执行去重算法，
+     * 完成后进入 [ScanUiState.Complete] 状态（含分组结果）。
+     */
+    fun startDetection() {
+        if (_scanState.value !is ScanUiState.ScanCompleted) return
+        val scanCompleted = _scanState.value as ScanUiState.ScanCompleted
+
+        viewModelScope.launch {
+            _scanState.value = ScanUiState.Scanning(
+                progress = 1f,
+                phase = "正在检测重复图片...",
+                scannedCount = scanCompleted.totalCount,
+                totalCount = scanCompleted.totalCount,
+                foundDuplicates = 0
+            )
 
             // Phase 2: 从数据库加载所有图片
             val images = try {
@@ -117,14 +141,12 @@ class ScanViewModel @Inject constructor(
             // Phase 3: 重复检测，收集分组结果
             val allGroups = mutableListOf<DuplicateGroup>()
             var foundCount = 0
-            var processedCount = 0
             val totalImages = images.size
 
             try {
                 detectDuplicateUseCase(images).collect { group ->
                     allGroups.add(group)
                     foundCount++
-                    processedCount++
                     _scanState.value = ScanUiState.Scanning(
                         progress = 1f,
                         phase = "正在整理结果...",
@@ -170,6 +192,11 @@ sealed class ScanUiState {
         val scannedCount: Int,
         val totalCount: Int,
         val foundDuplicates: Int
+    ) : ScanUiState()
+
+    /** 扫描已完成，等待用户确认执行重复检测 */
+    data class ScanCompleted(
+        val totalCount: Int
     ) : ScanUiState()
 
     /** 扫描和检测已完成，返回分组结果 */

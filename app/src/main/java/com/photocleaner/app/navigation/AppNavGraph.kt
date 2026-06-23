@@ -37,6 +37,7 @@ import com.photocleaner.app.ui.recyclebin.RecycleBinScreen
 import com.photocleaner.app.ui.result.ResultScreen
 import com.photocleaner.app.ui.scan.ScanScreen
 import com.photocleaner.app.ui.settings.SettingsScreen
+import com.photocleaner.app.utils.PermissionGate
 
 /**
  * 底部导航栏项定义。
@@ -54,7 +55,7 @@ private data class BottomNavItem(
 /** 底部导航栏显示的四个主屏幕 */
 private val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.HOME, "首页", Icons.Default.Home),
-    BottomNavItem(NavRoutes.SCAN, "扫描", Icons.Default.ClearAll),
+    BottomNavItem(NavRoutes.SCAN, "结果", Icons.Default.ClearAll),
     BottomNavItem(NavRoutes.RECYCLE_BIN, "回收站", Icons.Default.Delete),
     BottomNavItem(NavRoutes.SETTINGS, "设置", Icons.Default.Settings)
 )
@@ -71,7 +72,8 @@ fun AppNavGraph() {
     // 只在主屏幕显示底部导航栏
     val showBottomBar = currentRoute !in routesWithoutBottomBar
 
-    Scaffold(
+    PermissionGate {
+        Scaffold(
         bottomBar = {
             if (showBottomBar) {
                 AppBottomBar(navController)
@@ -145,6 +147,7 @@ fun AppNavGraph() {
             }
         }
     }
+    }
 }
 
 @Composable
@@ -159,12 +162,10 @@ fun AppBottomBar(navController: NavHostController) {
                 label = { Text(item.label) },
                 selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                 onClick = {
+                    // 各 tab 作为独立页面，返回直接退出当前界面
                     navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
-                        restoreState = true
                     }
                 }
             )

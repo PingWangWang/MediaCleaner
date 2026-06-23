@@ -60,7 +60,15 @@ fun ScanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("正在扫描") },
+                title = {
+                    Text(
+                        when (scanState) {
+                            is ScanUiState.Complete -> "检测完成"
+                            is ScanUiState.ScanCompleted -> "扫描完成"
+                            else -> "正在扫描"
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(Icons.Default.Close, contentDescription = "取消")
@@ -140,6 +148,44 @@ fun ScanScreen(
                             textAlign = TextAlign.Center
                         )
                     }
+                }
+
+                is ScanUiState.ScanCompleted -> {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "扫描完成",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "共扫描 ${state.totalCount} 张图片",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "请手动确认后才执行去重检测",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { viewModel.startDetection() },
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Text("开始检测重复图片", fontSize = 16.sp)
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 is ScanUiState.Complete -> {
