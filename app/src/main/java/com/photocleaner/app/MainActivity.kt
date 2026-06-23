@@ -13,10 +13,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.photocleaner.app.navigation.AppNavGraph
 import com.photocleaner.app.ui.theme.PhotoCleanerTheme
+import com.photocleaner.feature.settings.data.SettingsPreferences
+import com.photocleaner.feature.settings.ui.ThemeMode
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * 清图大师主 Activity。
@@ -27,11 +32,21 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @Inject
+    lateinit var settingsPreferences: SettingsPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PhotoCleanerTheme {
+            val themeMode by settingsPreferences.themeMode
+                .collectAsState(initial = ThemeMode.SYSTEM.name)
+            val isDarkTheme = when (ThemeMode.valueOf(themeMode)) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            PhotoCleanerTheme(darkTheme = isDarkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavGraph()
                 }
