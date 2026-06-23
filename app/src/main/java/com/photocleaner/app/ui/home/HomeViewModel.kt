@@ -65,7 +65,6 @@ class HomeViewModel @Inject constructor(
 
     fun startDetection() {
         if (_state.value !is HomeUiState.ScanCompleted) return
-        val completed = _state.value as HomeUiState.ScanCompleted
         viewModelScope.launch {
             _state.value = HomeUiState.Detecting(0)
             val images = try {

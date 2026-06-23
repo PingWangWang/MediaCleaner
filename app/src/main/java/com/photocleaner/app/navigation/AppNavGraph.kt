@@ -64,7 +64,10 @@ private val bottomNavItems = listOf(
 private val routesWithoutBottomBar = setOf(NavRoutes.DETAIL)
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    agreementAccepted: Boolean? = null,
+    onAcceptAgreement: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -72,7 +75,10 @@ fun AppNavGraph() {
     // 只在主屏幕显示底部导航栏
     val showBottomBar = currentRoute !in routesWithoutBottomBar
 
-    PermissionGate {
+    PermissionGate(
+        agreementAccepted = agreementAccepted,
+        onAcceptAgreement = onAcceptAgreement
+    ) {
         Scaffold(
         bottomBar = {
             if (showBottomBar) {

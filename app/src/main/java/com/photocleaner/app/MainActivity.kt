@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.photocleaner.app.navigation.AppNavGraph
 import com.photocleaner.app.ui.theme.PhotoCleanerTheme
 import com.photocleaner.feature.settings.data.SettingsPreferences
 import com.photocleaner.feature.settings.ui.ThemeMode
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -48,7 +50,17 @@ class MainActivity : ComponentActivity() {
             }
             PhotoCleanerTheme(darkTheme = isDarkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavGraph()
+                    val agreementAccepted by settingsPreferences.privacyPolicyAccepted
+                        .collectAsState(initial = null)
+                    val scope = rememberCoroutineScope()
+                    AppNavGraph(
+                        agreementAccepted = agreementAccepted,
+                        onAcceptAgreement = {
+                            scope.launch {
+                                settingsPreferences.setPrivacyPolicyAccepted(true)
+                            }
+                        }
+                    )
                 }
             }
         }
