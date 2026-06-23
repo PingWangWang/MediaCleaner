@@ -40,7 +40,7 @@ class HomeViewModel @Inject constructor(
     private val fileOperator: FileOperator
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<HomeUiState>(HomeUiState.Idle)
+    private val _state = MutableStateFlow<HomeUiState>(HomeUiState.Idle())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     private val _paused = MutableStateFlow(false)

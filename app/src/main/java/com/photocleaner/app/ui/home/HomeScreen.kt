@@ -75,8 +75,6 @@ fun HomeScreen(
                     groups = s.groups,
                     selectedIds = selectedIds,
                     viewModel = viewModel,
-                    scope = scope,
-                    snackbarHostState = snackbarHostState,
                     onGoHome = { viewModel.goHome() }
                 )
                 is HomeUiState.Error -> ErrorContent(s.message) { viewModel.startScan() }
@@ -209,7 +207,6 @@ private fun DetectingContent(
 
 @Composable
 private fun CompleteContent(groups: List<DuplicateGroup>, selectedIds: Set<Long>, viewModel: HomeViewModel,
-                            scope: kotlinx.coroutines.CoroutineScope, snackbarHostState: SnackbarHostState,
                             onGoHome: () -> Unit) {
     if (groups.isEmpty()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
