@@ -332,11 +332,6 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("设置") }
-            )
-        }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier

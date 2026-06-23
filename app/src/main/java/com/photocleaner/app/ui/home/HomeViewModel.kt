@@ -25,7 +25,7 @@ sealed class HomeUiState {
     data object Starting : HomeUiState()
     data class Scanning(val progress: Float, val scannedCount: Int, val totalCount: Int) : HomeUiState()
     data class ScanCompleted(val totalCount: Int) : HomeUiState()
-    data class Detecting(val foundGroups: Int, val paused: Boolean = false) : HomeUiState()
+    data class Detecting(val foundGroups: Int, val paused: Boolean = false, val detectedGroups: List<DuplicateGroup> = emptyList()) : HomeUiState()
     data class Complete(val groups: List<DuplicateGroup>) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
@@ -114,7 +114,7 @@ class HomeViewModel @Inject constructor(
         detectionJob?.cancel()
         detectionJob = viewModelScope.launch {
             _paused.value = false
-            _state.value = HomeUiState.Detecting(0)
+            _state.value = HomeUiState.Detecting(0, detectedGroups = emptyList())
             val images = try {
                 imageDao.getAll().map { it.toImageItem() }
             } catch (e: Exception) {
@@ -127,11 +127,11 @@ class HomeViewModel @Inject constructor(
                 detectDuplicateUseCase(images).collect { group ->
                     // 如果暂停，则阻塞直到恢复
                     if (_paused.value) {
-                        _state.value = HomeUiState.Detecting(groups.size, paused = true)
+                        _state.value = HomeUiState.Detecting(groups.size, paused = true, detectedGroups = groups.toList())
                         _paused.first { !it }
                     }
                     groups.add(group)
-                    _state.value = HomeUiState.Detecting(groups.size)
+                    _state.value = HomeUiState.Detecting(groups.size, detectedGroups = groups.toList())
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 _state.value = HomeUiState.ScanCompleted(lastScanTotalCount)

@@ -89,36 +89,6 @@ fun RecycleBinScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("回收站")
-                        if (itemCount > 0) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = MaterialTheme.shapes.small,
-                                color = MaterialTheme.colorScheme.secondaryContainer
-                            ) {
-                                Text(
-                                    text = "$itemCount",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        }
-                    }
-                },
-
-                actions = {
-                    if (itemCount > 0) {
-                        IconButton(onClick = { showClearAllConfirm = true }) {
-                            Icon(Icons.Default.DeleteSweep, contentDescription = "清空")
-                        }
-                    }
-                }
-            )
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (items.isEmpty()) {
