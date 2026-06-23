@@ -28,7 +28,7 @@ fun Bitmap.toGrayscale(): Bitmap {
     return try {
         val width = width
         val height = height
-        val grayscaleBitmap = Bitmap.createBitmap(width, height, config ?: Bitmap.Config.ARGB_8888)
+        val grayscaleBitmap = Bitmap.createBitmap(width, height, config)
         val canvas = Canvas(grayscaleBitmap)
         val paint = Paint().apply {
             colorFilter = ColorMatrixColorFilter(

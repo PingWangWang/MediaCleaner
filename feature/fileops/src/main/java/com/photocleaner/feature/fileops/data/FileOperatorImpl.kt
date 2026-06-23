@@ -212,6 +212,7 @@ class FileOperatorImpl @Inject constructor(
                 // 无直接删除权限时，通过 MediaStore.createDeleteRequest 发送系统请求
                 try {
                     val uri = Uri.parse(image.uri)
+                    @Suppress("UNUSED_VARIABLE")
                     val pendingIntent = MediaStore.createDeleteRequest(
                         context.contentResolver,
                         listOf(uri)

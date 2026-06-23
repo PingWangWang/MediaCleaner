@@ -45,13 +45,6 @@ class DHashCalculatorTest {
         assertTrue(hash.all { it == '0' || it == '1' })
     }
 
-    @Test
-    fun testCalculateHashWithNullBitmap() {
-        // Should handle gracefully
-        val result = calculator.calculateHash(null as? Bitmap ?: return)
-        assertTrue(result.isNotEmpty())
-    }
-
     private fun createTestBitmap(width: Int, height: Int, fillWhite: Boolean = true): Bitmap {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         for (x in 0 until width) {

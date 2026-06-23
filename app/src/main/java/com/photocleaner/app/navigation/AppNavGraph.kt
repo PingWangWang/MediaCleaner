@@ -119,8 +119,7 @@ fun AppNavGraph() {
                 arguments = listOf(
                     navArgument("groupId") { type = NavType.LongType }
                 )
-            ) { backStackEntry ->
-                val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
+            ) {
                 DetailScreen(
                     onBack = { navController.popBackStack() }
                 )

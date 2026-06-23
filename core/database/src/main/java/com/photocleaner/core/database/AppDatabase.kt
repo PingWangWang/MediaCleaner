@@ -38,7 +38,7 @@ import com.photocleaner.core.database.entity.ScanCheckpointEntity
         ScanCheckpointEntity::class
     ],
     version = 2,
-    exportSchema = true
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 

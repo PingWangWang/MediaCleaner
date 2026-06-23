@@ -55,7 +55,6 @@ class ScanImageUseCase @Inject constructor(
         // 2. 发射 STARTED 状态
         emit(ScanProgress.STARTED)
 
-        val allImages = mutableListOf<ImageItem>()
         var scannedCount = 0
 
         try {

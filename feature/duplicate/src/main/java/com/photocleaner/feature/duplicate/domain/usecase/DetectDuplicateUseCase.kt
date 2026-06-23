@@ -237,8 +237,8 @@ class DetectDuplicateUseCase @Inject constructor(
 
         // 将每个分量中的 ID 映射回 ImageItem
         val idToItem = cluster.associateBy { it.id }
-        return components.values.map { ids ->
-            ids.mapNotNull { idToItem[it] }
+        return components.values.map { idSet ->
+            idSet.mapNotNull { idToItem[it] }
         }
     }
 

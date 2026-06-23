@@ -51,7 +51,7 @@ fun ResultScreen(
                     onClick = {
                         showCleanConfirm = false
                         scope.launch {
-                            val result = viewModel.deleteSelected()
+                            viewModel.deleteSelected()
                             snackbarHostState.showSnackbar(
                                 message = "删除成功，可在回收站中恢复",
                                 actionLabel = "撤销",

@@ -123,7 +123,7 @@ class UpdateApiDataSource @Inject constructor() {
             releaseNotes = json.optString("releaseNotes", ""),
             md5 = json.optString("md5", ""),
             fileSize = json.optLong("fileSize", 0L),
-            minSupportedVersion = json.optString("minSupportedVersion", null)
+            minSupportedVersion = json.optString("minSupportedVersion", "").ifEmpty { null }
         )
     }
 

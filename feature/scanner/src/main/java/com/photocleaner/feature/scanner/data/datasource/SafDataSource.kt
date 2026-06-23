@@ -82,11 +82,6 @@ class SafDataSource @Inject constructor(
 
                 if (DocumentsContract.Document.MIME_TYPE_DIR == mimeType) {
                     // 递归扫描子目录
-                    val childUri = DocumentsContract.buildChildDocumentsUriUsingTree(
-                        directoryUri,
-                        DocumentsContract.getTreeDocumentId(directoryUri)
-                    )
-                    // 构建子目录 Uri
                     val subDirUri = DocumentsContract.buildDocumentUriUsingTree(
                         directoryUri,
                         documentId

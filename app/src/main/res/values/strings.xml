@@ -54,6 +54,7 @@
 
     <!-- Settings Screen -->
     <string name="settings_scan">扫描设置</string>
+    <string name="settings_title">设置</string>
     <string name="settings_scan_concurrency">扫描并发数</string>
     <string name="settings_high_precision">高精度模式</string>
     <string name="settings_high_precision_desc">启用pHash/ORB算法提高相似识别精度（耗电增加）</string>

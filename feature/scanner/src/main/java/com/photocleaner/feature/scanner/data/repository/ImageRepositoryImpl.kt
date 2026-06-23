@@ -2,6 +2,7 @@ package com.photocleaner.feature.scanner.data.repository
 
 import com.photocleaner.core.common.model.ImageItem
 import com.photocleaner.core.database.dao.ImageDao
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.photocleaner.core.database.entity.ImageItemEntity
 import com.photocleaner.core.database.entity.fromImageItem
 import com.photocleaner.core.database.entity.toImageItem
@@ -26,6 +27,7 @@ import javax.inject.Singleton
  *
  * @author PhotoCleaner
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class ImageRepositoryImpl @Inject constructor(
     private val mediaStoreDataSource: MediaStoreDataSource,
