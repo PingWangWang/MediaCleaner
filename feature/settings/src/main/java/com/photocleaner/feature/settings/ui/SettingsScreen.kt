@@ -48,7 +48,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section model for the settings list
@@ -109,6 +112,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel? = null,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val state = viewModel?.uiState?.collectAsState()?.value ?: SettingsState()
 
     val items = remember(state) {
@@ -302,18 +306,6 @@ fun SettingsScreen(
             )
 
             add(
-                RadioGroupItem(
-                    id = "language",
-                    title = "语言",
-                    selectedValue = state.language,
-                    options = listOf("zh", "en"),
-                    onOptionSelected = { value ->
-                        viewModel?.updateLanguage(value)
-                    }
-                )
-            )
-
-            add(
                 ToggleItem(
                     id = "notification",
                     title = "启用通知",
@@ -363,7 +355,14 @@ fun SettingsScreen(
                     id = "privacy_policy",
                     title = "隐私政策",
                     subtitle = "查看隐私政策",
-                    onClick = { /* TODO: open privacy policy URL */ }
+                    onClick = {
+                        val ctx = context
+                        try {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse("https://photocleaner.app/privacy"))
+                            )
+                        } catch (_: Exception) { }
+                    }
                 )
             )
 
@@ -372,27 +371,17 @@ fun SettingsScreen(
                     id = "terms_of_service",
                     title = "服务条款",
                     subtitle = "查看服务条款",
-                    onClick = { /* TODO: open terms URL */ }
+                    onClick = {
+                        val ctx = context
+                        try {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse("https://photocleaner.app/terms"))
+                            )
+                        } catch (_: Exception) { }
+                    }
                 )
             )
 
-            add(
-                ActionItem(
-                    id = "rate_us",
-                    title = "给我们评分",
-                    subtitle = "在应用商店为我们打分",
-                    onClick = { /* TODO: open store page */ }
-                )
-            )
-
-            add(
-                ActionItem(
-                    id = "check_update",
-                    title = "检查更新",
-                    subtitle = "当前版本 v${state.appVersion}",
-                    onClick = { /* TODO: wire up check-update use-case */ }
-                )
-            )
         }
     }
 

@@ -16,11 +16,13 @@ import com.photocleaner.core.database.dao.ImageDao
 import com.photocleaner.core.database.entity.toImageItem
 import com.photocleaner.feature.fileops.domain.FileOperator
 import com.photocleaner.feature.fileops.model.DeleteResult
+import com.photocleaner.feature.settings.data.SettingsPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,7 +36,8 @@ class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val imageDao: ImageDao,
     private val duplicateGroupDao: DuplicateGroupDao,
-    private val fileOperator: FileOperator
+    private val fileOperator: FileOperator,
+    private val settingsPreferences: SettingsPreferences? = null
 ) : ViewModel() {
 
     /** 当前分组 ID（从导航参数获取） */
@@ -85,8 +88,11 @@ class DetailViewModel @Inject constructor(
                     if (bestMember != null) {
                         _bestImageId.value = bestMember.imageId
                     } else if (items.isNotEmpty()) {
-                        // 默认第一张为保留图片
-                        _bestImageId.value = items.first().id
+                        // 根据设置决定是否自动保留第一张
+                        val autoRetain = settingsPreferences?.autoRetainBest?.first() ?: true
+                        if (autoRetain) {
+                            _bestImageId.value = items.first().id
+                        }
                     }
                 }
             } catch (e: Exception) {
