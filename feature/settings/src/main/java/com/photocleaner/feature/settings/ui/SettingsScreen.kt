@@ -358,33 +358,40 @@ fun SettingsScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 // Group composable — clickable header row + expandable items
 // ─────────────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroupView(group: SettingsGroup) {
     var expanded by remember { mutableStateOf(false) }
 
     Column {
         // ── Clickable header row ────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            onClick = { expanded = !expanded }
         ) {
-            Text(
-                text = group.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = if (expanded) Icons.Default.KeyboardArrowDown
-                              else Icons.Default.KeyboardArrowRight,
-                contentDescription = if (expanded) "折叠" else "展开",
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = group.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowDown
+                                  else Icons.Default.KeyboardArrowRight,
+                    contentDescription = if (expanded) "折叠" else "展开",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         // ── Animated item list ──────────────────────────

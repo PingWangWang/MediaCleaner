@@ -7,11 +7,12 @@
  */
 package com.photocleaner.app.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
@@ -23,10 +24,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -39,30 +39,23 @@ import com.photocleaner.app.ui.home.HomeScreen
 import com.photocleaner.app.ui.recyclebin.RecycleBinScreen
 import com.photocleaner.app.ui.settings.SettingsScreen
 import com.photocleaner.app.utils.PermissionGate
+import kotlinx.coroutines.launch
 
-/**
- * 底部导航栏项定义。
- *
- * @property route  导航路由
- * @property label  显示的标签文本
- * @property icon   显示的图标
- */
 private data class BottomNavItem(
     val route: String,
     val label: String,
     val icon: ImageVector
 )
 
-/** 底部导航栏显示的四个主屏幕 */
 private val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.HOME, "首页", Icons.Default.Home),
     BottomNavItem(NavRoutes.RECYCLE_BIN, "回收站", Icons.Default.Delete),
     BottomNavItem(NavRoutes.SETTINGS, "设置", Icons.Default.Settings)
 )
 
-/** 不显示底部导航栏的路由集合（仅详情页） */
 private val routesWithoutBottomBar = setOf(NavRoutes.DETAIL)
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun AppNavGraph(
     agreementAccepted: Boolean? = null,
@@ -71,94 +64,57 @@ fun AppNavGraph(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-    // 只在主屏幕显示底部导航栏
     val showBottomBar = currentRoute !in routesWithoutBottomBar
 
-    PermissionGate(
-        agreementAccepted = agreementAccepted,
-        onAcceptAgreement = onAcceptAgreement
-    ) {
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    val scope = rememberCoroutineScope()
+
+    PermissionGate(agreementAccepted = agreementAccepted, onAcceptAgreement = onAcceptAgreement) {
         Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                AppBottomBar(navController)
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = NavRoutes.HOME,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            // ---------- 首页（扫描、检测、结果展示三合一） ----------
-            composable(NavRoutes.HOME,
-                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
-                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
-            ) {
-                HomeScreen(
-                    onOpenRecycleBin = { navController.navigate(NavRoutes.RECYCLE_BIN) },
-                    onOpenSettings = { navController.navigate(NavRoutes.SETTINGS) }
-                )
-            }
-
-            // ---------- 详情页 ----------
-            composable(
-                route = NavRoutes.DETAIL,
-                enterTransition = { fadeIn(tween(300)) },
-                exitTransition = { fadeOut(tween(300)) },
-                arguments = listOf(
-                    navArgument("groupId") { type = NavType.LongType }
-                )
-            ) {
-                DetailScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            // ---------- 回收站 ----------
-            composable(NavRoutes.RECYCLE_BIN,
-                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
-                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
-            ) {
-                RecycleBinScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            // ---------- 设置页 ----------
-            composable(NavRoutes.SETTINGS,
-                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
-                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) }
-            ) {
-                SettingsScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
-        }
-    }
-    }
-}
-
-@Composable
-fun AppBottomBar(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    NavigationBar {
-        bottomNavItems.forEach { item ->
-            NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
-                selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
-                onClick = {
-                    // 各 tab 作为独立页面，返回直接退出当前界面
-                    navController.navigate(item.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
+            bottomBar = {
+                if (showBottomBar) {
+                    NavigationBar {
+                        bottomNavItems.forEachIndexed { index, item ->
+                            NavigationBarItem(
+                                icon = { Icon(item.icon, contentDescription = item.label) },
+                                label = { Text(item.label) },
+                                selected = pagerState.currentPage == index,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } }
+                            )
+                        }
                     }
                 }
-            )
+            }
+        ) { innerPadding ->
+            // Detail page uses NavHost, main tabs use HorizontalPager
+            if (currentRoute == NavRoutes.DETAIL) {
+                NavHost(
+                    navController = navController,
+                    startDestination = NavRoutes.DETAIL,
+                    modifier = Modifier.padding(innerPadding)
+                ) {
+                    composable(
+                        route = NavRoutes.DETAIL,
+                        enterTransition = { fadeIn(tween(300)) },
+                        exitTransition = { fadeOut(tween(300)) },
+                        arguments = listOf(navArgument("groupId") { type = NavType.LongType })
+                    ) {
+                        DetailScreen(onBack = { navController.popBackStack() })
+                    }
+                }
+            } else {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.padding(innerPadding),
+                    userScrollEnabled = true
+                ) { page ->
+                    when (page) {
+                        0 -> HomeScreen()
+                        1 -> RecycleBinScreen(onBack = { scope.launch { pagerState.animateScrollToPage(0) } })
+                        2 -> SettingsScreen(onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
+                    }
+                }
+            }
         }
     }
 }

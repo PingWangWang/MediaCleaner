@@ -23,9 +23,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    onOpenRecycleBin: () -> Unit,
-    onOpenSettings: () -> Unit
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val selectedIds by viewModel.selectedGroupIds.collectAsState()
@@ -55,7 +53,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (val s = state) {
-                is HomeUiState.Idle -> IdleContent(onStartScan = { viewModel.startScan() }, onOpenRecycleBin, onOpenSettings)
+                is HomeUiState.Idle -> IdleContent(onStartScan = { viewModel.startScan() })
                 is HomeUiState.Starting -> CircularProgressIndicator(progress = 0f)
                 is HomeUiState.Scanning -> ScanningContent(s, pulseAlpha.value)
                 is HomeUiState.ScanCompleted -> ScanCompletedContent(s.totalCount) { viewModel.startDetection() }
@@ -90,7 +88,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun IdleContent(onStartScan: () -> Unit, onOpenRecycleBin: () -> Unit, onOpenSettings: () -> Unit) {
+private fun IdleContent(onStartScan: () -> Unit) {
     Spacer(Modifier.height(48.dp))
     Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
     Spacer(Modifier.height(16.dp))
@@ -100,11 +98,6 @@ private fun IdleContent(onStartScan: () -> Unit, onOpenRecycleBin: () -> Unit, o
         Icon(Icons.Default.DeleteSweep, contentDescription = null)
         Spacer(Modifier.width(8.dp))
         Text("开始扫描", fontSize = 18.sp)
-    }
-    Spacer(Modifier.height(16.dp))
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onOpenRecycleBin, modifier = Modifier.weight(1f)) { Text("回收站") }
-        OutlinedButton(onClick = onOpenSettings, modifier = Modifier.weight(1f)) { Text("设置") }
     }
     Spacer(Modifier.height(32.dp))
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
