@@ -107,48 +107,35 @@ class MediaStoreDataSource @Inject constructor(
         selection: String?,
         selectionArgs: Array<String>? = null
     ) {
-        val chunkSize = com.photocleaner.core.common.constant.AppConstants.SCAN_CHUNK_SIZE
-        var offset = 0
-        var hasMore = true
+        var cursor: android.database.Cursor? = null
+        try {
+            cursor = contentResolver.query(
+                uri,
+                PROJECTION,
+                selection,
+                selectionArgs,
+                SORT_ORDER
+            )
 
-        while (hasMore) {
-            val limit = "$offset,$chunkSize"
-            var cursor: android.database.Cursor? = null
-            try {
-                cursor = contentResolver.query(
-                    uri,
-                    PROJECTION,
-                    selection,
-                    selectionArgs,
-                    "$SORT_ORDER LIMIT $limit"
-                )
+            if (cursor == null || !cursor.moveToFirst()) return
 
-                if (cursor == null || !cursor.moveToFirst()) {
-                    hasMore = false
-                    continue
-                }
+            val chunk = mutableListOf<ImageItem>()
+            do {
+                val size = cursor.getLong(COL_SIZE)
+                // 过滤小于最小尺寸的图片
+                if (size < MediaConstants.MIN_IMAGE_SIZE) continue
 
-                val chunk = mutableListOf<ImageItem>()
-                do {
-                    val size = cursor.getLong(COL_SIZE)
-                    // 过滤小于最小尺寸的图片
-                    if (size < MediaConstants.MIN_IMAGE_SIZE) continue
+                val imageItem = mapCursorToImageItem(cursor)
+                chunk.add(imageItem)
+            } while (cursor.moveToNext())
 
-                    val imageItem = mapCursorToImageItem(cursor)
-                    chunk.add(imageItem)
-                } while (cursor.moveToNext())
-
-                if (chunk.isNotEmpty()) {
-                    emit(chunk)
-                }
-
-                offset += chunkSize
-            } catch (e: Exception) {
-                // 查询失败则终止分页
-                hasMore = false
-            } finally {
-                cursor?.close()
+            if (chunk.isNotEmpty()) {
+                emit(chunk)
             }
+        } catch (e: Exception) {
+            // 查询失败时静默处理
+        } finally {
+            cursor?.close()
         }
     }
 
