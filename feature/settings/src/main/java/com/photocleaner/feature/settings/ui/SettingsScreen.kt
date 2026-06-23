@@ -380,8 +380,7 @@ private fun GroupView(group: SettingsGroup) {
             ) {
                 Text(
                     text = group.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))

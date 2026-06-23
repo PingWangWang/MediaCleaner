@@ -1,7 +1,10 @@
 package com.photocleaner.app.ui.home
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.photocleaner.app.utils.ScanRecord
+import com.photocleaner.app.utils.ScanRecordStore
 import com.photocleaner.core.common.model.DuplicateGroup
 import com.photocleaner.core.database.dao.ImageDao
 import com.photocleaner.core.database.entity.toImageItem
@@ -11,19 +14,14 @@ import com.photocleaner.feature.fileops.model.DeleteResult
 import com.photocleaner.feature.scanner.domain.usecase.ScanImageUseCase
 import com.photocleaner.feature.scanner.model.ScanProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class ScanRecord(
-    val totalImages: Int,
-    val duplicateGroups: Int,
-    val timestamp: Long
-)
-
 sealed class HomeUiState {
-    data class Idle(val lastScan: ScanRecord? = null) : HomeUiState()
+    data class Idle(val records: List<ScanRecord> = emptyList()) : HomeUiState()
     data object Starting : HomeUiState()
     data class Scanning(val progress: Float, val scannedCount: Int, val totalCount: Int) : HomeUiState()
     data class ScanCompleted(val totalCount: Int) : HomeUiState()
@@ -34,6 +32,7 @@ sealed class HomeUiState {
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: android.content.Context,
     private val scanImageUseCase: ScanImageUseCase,
     private val detectDuplicateUseCase: DetectDuplicateUseCase,
     private val imageDao: ImageDao,
@@ -46,7 +45,16 @@ class HomeViewModel @Inject constructor(
     private val _paused = MutableStateFlow(false)
     private var detectionJob: Job? = null
     private var lastScanTotalCount: Int = 0
-    private var lastScanRecord: ScanRecord? = null
+
+    init {
+        viewModelScope.launch {
+            ScanRecordStore.getRecords(context).collect { records ->
+                if (_state.value is HomeUiState.Idle) {
+                    _state.value = HomeUiState.Idle(records)
+                }
+            }
+        }
+    }
 
     private val _selectedGroupIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedGroupIds: StateFlow<Set<Long>> = _selectedGroupIds.asStateFlow()
@@ -62,7 +70,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun goHome() {
-        _state.value = HomeUiState.Idle(lastScan = lastScanRecord)
+        _state.value = HomeUiState.Idle()
+        viewModelScope.launch {
+            ScanRecordStore.getRecords(context).collect { records ->
+                if (_state.value is HomeUiState.Idle) {
+                    _state.value = HomeUiState.Idle(records)
+                }
+            }
+        }
     }
 
     fun startScan() {
@@ -83,7 +98,10 @@ class HomeViewModel @Inject constructor(
                 }
                 val total = when (val s = _state.value) { is HomeUiState.Scanning -> s.totalCount else -> 0 }
                 lastScanTotalCount = total
-                lastScanRecord = ScanRecord(totalImages = total, duplicateGroups = 0, timestamp = System.currentTimeMillis())
+                // 保存扫描记录
+                ScanRecordStore.addRecord(context, ScanRecord(
+                    totalImages = total, duplicateGroups = 0, timestamp = System.currentTimeMillis()
+                ))
                 _state.value = HomeUiState.ScanCompleted(total)
             } catch (e: Exception) {
                 _state.value = HomeUiState.Error("扫描异常：${e.localizedMessage ?: "未知错误"}")
@@ -122,11 +140,8 @@ class HomeViewModel @Inject constructor(
                 _state.value = HomeUiState.Error("检测失败：${e.localizedMessage ?: "未知错误"}")
                 return@launch
             }
-            lastScanRecord = ScanRecord(
-                totalImages = lastScanTotalCount,
-                duplicateGroups = groups.size,
-                timestamp = System.currentTimeMillis()
-            )
+            // 更新最后一条扫描记录，标记已检测
+            ScanRecordStore.updateLastRecord(context) { it.copy(duplicateGroups = groups.size, hasDetected = true) }
             _state.value = HomeUiState.Complete(groups)
         }
     }

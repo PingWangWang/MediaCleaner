@@ -1,6 +1,9 @@
 package com.photocleaner.app.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.photocleaner.app.utils.ScanRecord
 import com.photocleaner.core.common.model.DuplicateGroup
 import com.photocleaner.feature.fileops.model.DeleteResult
 import kotlinx.coroutines.launch
@@ -55,7 +59,7 @@ fun HomeScreen(
         ) {
             when (val s = state) {
                 is HomeUiState.Idle -> IdleContent(
-                    lastScan = s.lastScan,
+                    records = s.records,
                     onStartScan = { viewModel.startScan() }
                 )
                 is HomeUiState.Starting -> CircularProgressIndicator(progress = 0f)
@@ -106,35 +110,71 @@ fun HomeScreen(
 }
 
 @Composable
-private fun IdleContent(lastScan: ScanRecord?, onStartScan: () -> Unit) {
-    Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
-    Spacer(Modifier.height(16.dp))
-    Text("一键去重，释放存储空间", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    Spacer(Modifier.height(32.dp))
-    Button(onClick = onStartScan, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-        Icon(Icons.Default.DeleteSweep, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text("开始扫描", fontSize = 18.sp)
+private fun IdleContent(records: List<ScanRecord>, onStartScan: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(8.dp))
+        Text("一键去重，释放存储空间", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onStartScan, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+            Icon(Icons.Default.DeleteSweep, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("开始扫描", fontSize = 16.sp)
+        }
+        Spacer(Modifier.height(24.dp))
+
+        if (records.isEmpty()) {
+            Text("暂无扫描记录", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Text("扫描记录", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+            Spacer(Modifier.height(8.dp))
+            records.forEachIndexed { index, record ->
+                ScanRecordCard(record = record, isFirst = index == 0)
+                if (index < records.lastIndex) Spacer(Modifier.height(4.dp))
+            }
+        }
     }
-    Spacer(Modifier.height(32.dp))
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-        Column(Modifier.padding(16.dp)) {
-            Text("上次扫描", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(4.dp))
-            if (lastScan != null) {
-                val date = java.text.SimpleDateFormat("MM/dd HH:mm", java.util.Locale.getDefault())
-                    .format(java.util.Date(lastScan.timestamp))
-                Text("扫描了 ${lastScan.totalImages} 张图片", style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = if (lastScan.duplicateGroups > 0) "发现 ${lastScan.duplicateGroups} 组重复"
-                           else "未发现重复图片",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (lastScan.duplicateGroups > 0) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScanRecordCard(record: ScanRecord, isFirst: Boolean) {
+    var expanded by remember { mutableStateOf(isFirst) }
+    val date = java.text.SimpleDateFormat("MM/dd HH:mm", java.util.Locale.getDefault())
+        .format(java.util.Date(record.timestamp))
+
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        onClick = { expanded = !expanded }
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.weight(1f)) {
+                    Text("扫描了 ${record.totalImages} 张图片", fontSize = 14.sp)
+                    Text(date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Icon(
+                    if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
-                Text("暂无扫描记录", style = MaterialTheme.typography.bodyMedium)
+            }
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column(Modifier.padding(top = 8.dp)) {
+                    Divider(modifier = Modifier.padding(bottom = 8.dp))
+                    if (!record.hasDetected) {
+                        Text("未检测", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else if (record.duplicateGroups > 0) {
+                        Text("发现 ${record.duplicateGroups} 组重复图片", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                    } else {
+                        Text("未发现重复图片", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
         }
     }
@@ -172,7 +212,7 @@ private fun DetectingContent(
 ) {
     if (!s.paused) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+            CircularProgressIndicator(progress = 0f, modifier = Modifier.fillMaxSize())
         }
     } else {
         Icon(
