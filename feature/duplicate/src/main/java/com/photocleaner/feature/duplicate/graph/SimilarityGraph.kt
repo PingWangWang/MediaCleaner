@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 相似图模型，基于并查集的分组引擎
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.graph
 
 import javax.inject.Inject

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 重复分组领域模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.model
 
 /**

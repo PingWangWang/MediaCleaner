@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 删除操作结果模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.model
 
 /**

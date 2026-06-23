@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 图片项领域模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.model
 
 /**

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 回收站条目 Room 实体
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.database.entity
 
 import androidx.room.ColumnInfo

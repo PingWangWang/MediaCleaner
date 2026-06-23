@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 汉明距离匹配器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.matcher
 
 import javax.inject.Inject

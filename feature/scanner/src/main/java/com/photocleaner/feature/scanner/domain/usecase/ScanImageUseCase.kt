@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 全量图片扫描用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.domain.usecase
 
 import android.content.Context

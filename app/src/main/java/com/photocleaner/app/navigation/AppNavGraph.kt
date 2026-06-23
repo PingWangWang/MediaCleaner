@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Compose 导航图，定义所有页面路由
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.navigation
 
 import androidx.compose.foundation.layout.padding

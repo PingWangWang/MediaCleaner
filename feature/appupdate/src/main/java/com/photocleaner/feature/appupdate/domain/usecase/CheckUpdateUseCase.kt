@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 检查更新用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.domain.usecase
 
 import com.photocleaner.feature.appupdate.domain.repository.AppUpdateRepository

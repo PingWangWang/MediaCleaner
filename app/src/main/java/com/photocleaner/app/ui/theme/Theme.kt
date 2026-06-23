@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Compose Material 3 主题定义
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.ui.theme
 
 import android.app.Activity

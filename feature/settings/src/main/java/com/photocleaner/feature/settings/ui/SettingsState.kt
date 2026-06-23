@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 设置页面 UI 状态模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.settings.ui
 
 data class SettingsState(

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 感知哈希(pHash)计算器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.hash
 
 import android.graphics.Bitmap

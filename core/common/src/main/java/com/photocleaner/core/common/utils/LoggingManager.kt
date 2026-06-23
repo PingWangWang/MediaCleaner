@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 分级日志管理器，支持控制台与文件输出
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.utils
 
 import android.content.Context

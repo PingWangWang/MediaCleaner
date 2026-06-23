@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 回收站文件管理器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.data
 
 import android.content.Context

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 文件操作接口定义
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.domain
 
 import com.photocleaner.core.database.entity.RecycleItemEntity

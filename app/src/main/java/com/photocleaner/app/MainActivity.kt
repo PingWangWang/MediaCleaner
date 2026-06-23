@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 应用唯一 Activity 宿主，Compose 入口
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app
 
 import android.os.Bundle

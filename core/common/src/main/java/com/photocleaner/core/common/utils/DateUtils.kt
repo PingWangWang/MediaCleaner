@@ -1,10 +1,16 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 日期工具类
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.utils
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 /**
  * 日期时间工具类。

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 重复检测器抽象基类
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.base
 
 import com.photocleaner.core.common.model.DuplicateGroup

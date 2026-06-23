@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * APK 文件下载器，支持断点续传
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.data.datasource
 
 import android.content.Context

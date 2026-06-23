@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 文件操作模块 Hilt 依赖注入模块
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.di
 
 import com.photocleaner.feature.fileops.data.FileOperatorImpl

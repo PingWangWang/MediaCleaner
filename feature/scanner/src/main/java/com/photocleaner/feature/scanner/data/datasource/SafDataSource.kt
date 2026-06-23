@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * SAF 存储访问框架扫描数据源
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.data.datasource
 
 import android.content.Context

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 版本更新信息模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.model
 
 /**

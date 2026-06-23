@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 文件大小格式化工具类
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.utils
 
 import java.text.DecimalFormat

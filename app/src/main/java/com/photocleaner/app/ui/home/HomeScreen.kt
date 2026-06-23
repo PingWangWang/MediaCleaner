@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 首页 Compose UI
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.ui.home
 
 import androidx.compose.foundation.layout.*

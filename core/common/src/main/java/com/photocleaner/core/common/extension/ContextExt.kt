@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Context 扩展函数集合
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.extension
 
 import android.content.Context
@@ -6,7 +13,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
-import android.provider.OpenableColumns
 import java.io.FileNotFoundException
 
 /**

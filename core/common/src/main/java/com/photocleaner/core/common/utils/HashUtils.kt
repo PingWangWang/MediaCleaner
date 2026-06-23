@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 哈希计算工具类
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.utils
 
 import java.io.File

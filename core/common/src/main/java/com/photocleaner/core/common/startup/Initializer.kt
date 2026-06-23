@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * App Startup 初始化器，异步初始化日志等组件
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.startup
 
 import android.content.Context

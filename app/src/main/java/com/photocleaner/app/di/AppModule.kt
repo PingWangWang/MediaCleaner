@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 应用级依赖注入模块，提供数据库、DataStore、OkHttp 等全局依赖
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.di
 
 import android.content.Context

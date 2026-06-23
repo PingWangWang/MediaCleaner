@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Room 数据库主类，管理所有实体与 DAO
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.database
 
 import android.content.Context

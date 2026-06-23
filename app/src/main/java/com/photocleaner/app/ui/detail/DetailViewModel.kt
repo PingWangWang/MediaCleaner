@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 图片详情页 ViewModel
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.ui.detail
 
 import androidx.lifecycle.SavedStateHandle

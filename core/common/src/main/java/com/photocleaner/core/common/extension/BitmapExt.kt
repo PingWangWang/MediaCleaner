@@ -1,7 +1,13 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Bitmap 扩展函数（灰度转换、缩放、导出）
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.extension
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint

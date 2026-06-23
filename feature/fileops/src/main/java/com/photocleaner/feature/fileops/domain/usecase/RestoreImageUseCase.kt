@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 恢复图片用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.domain.usecase
 
 import com.photocleaner.feature.fileops.domain.FileOperator

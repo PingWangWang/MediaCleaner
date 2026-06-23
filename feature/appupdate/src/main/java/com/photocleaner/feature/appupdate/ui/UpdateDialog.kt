@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 更新弹窗 Compose UI
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.ui
 
 import androidx.compose.foundation.layout.Column

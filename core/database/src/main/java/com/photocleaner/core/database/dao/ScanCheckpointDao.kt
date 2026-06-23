@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 扫描断点数据访问接口
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.database.dao
 
 import androidx.room.Dao

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 设置页面 Compose UI
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.ui.settings
 
 import androidx.compose.runtime.Composable

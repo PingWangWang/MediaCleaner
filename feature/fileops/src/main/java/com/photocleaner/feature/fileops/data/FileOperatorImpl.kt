@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 文件操作实现，整合删除/恢复/回收站管理
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.data
 
 import android.content.ContentValues

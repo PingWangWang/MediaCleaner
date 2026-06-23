@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * ViewModel 基类，提供协程作用域封装
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.base
 
 import androidx.lifecycle.ViewModel

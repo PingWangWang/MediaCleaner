@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 局部敏感哈希(LSH)聚类算法
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.lsh
 
 import com.photocleaner.core.common.model.ImageItem

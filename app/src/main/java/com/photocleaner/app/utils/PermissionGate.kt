@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 权限请求 Compose 组件，封装运行时权限申请逻辑
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.utils
 
 import android.Manifest

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 权限工具类，辅助权限检查与跳转设置
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.utils
 
 import android.Manifest

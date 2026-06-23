@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * File 扩展函数集合
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.extension
 
 import android.webkit.MimeTypeMap

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 扫描模块 Hilt 依赖注入模块
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.di
 
 import com.photocleaner.feature.scanner.data.repository.ImageRepositoryImpl

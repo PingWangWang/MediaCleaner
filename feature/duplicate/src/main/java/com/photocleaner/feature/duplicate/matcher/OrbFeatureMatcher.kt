@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * ORB 特征匹配器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.matcher
 
 import android.graphics.Bitmap

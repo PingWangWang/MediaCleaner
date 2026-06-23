@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 用例基类，定义 UseCase 执行模板
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.base
 
 import kotlinx.coroutines.CoroutineDispatcher

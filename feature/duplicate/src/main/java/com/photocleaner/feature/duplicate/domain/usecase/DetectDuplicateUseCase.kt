@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 重复检测用例，5层检测流水线编排
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.domain.usecase
 
 import android.graphics.BitmapFactory
@@ -8,7 +15,6 @@ import com.photocleaner.feature.duplicate.graph.SimilarityGraph
 import com.photocleaner.feature.duplicate.hash.DHashCalculator
 import com.photocleaner.feature.duplicate.hash.PHashCalculator
 import com.photocleaner.feature.duplicate.lsh.LshClusterAlgorithm
-import com.photocleaner.feature.duplicate.lsh.LshClusterResult
 import com.photocleaner.feature.duplicate.matcher.HammingDistanceMatcher
 import com.photocleaner.feature.duplicate.matcher.OrbFeatureMatcher
 import kotlinx.coroutines.Dispatchers

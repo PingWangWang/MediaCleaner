@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 设备性能分级器，自动检测并分级
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.utils
 
 import android.app.ActivityManager

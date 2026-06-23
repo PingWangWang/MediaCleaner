@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * WorkManager 后台任务调度器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.worker
 
 import android.content.Context

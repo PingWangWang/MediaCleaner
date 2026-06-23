@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 导航路由常量定义
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.navigation
 
 /**

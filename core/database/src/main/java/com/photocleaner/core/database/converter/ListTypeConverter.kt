@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * Room 类型转换器，支持 List<Long> 存储
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.database.converter
 
 import androidx.room.TypeConverter

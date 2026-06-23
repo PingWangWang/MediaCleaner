@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 并查集数据结构，路径压缩与按秩合并
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.duplicate.graph
 
 /**

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 扫描进度状态模型
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.model
 
 /**

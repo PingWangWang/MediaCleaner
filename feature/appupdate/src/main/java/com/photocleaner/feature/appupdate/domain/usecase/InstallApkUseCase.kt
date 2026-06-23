@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 安装 APK 用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.domain.usecase
 
 import android.content.Context

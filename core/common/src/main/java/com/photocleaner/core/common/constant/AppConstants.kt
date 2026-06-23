@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 应用全局常量定义
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.core.common.constant
 
 /**

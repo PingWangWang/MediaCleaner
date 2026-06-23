@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 更新 API 数据源
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.data.datasource
 
 import com.photocleaner.feature.appupdate.model.UpdateInfo

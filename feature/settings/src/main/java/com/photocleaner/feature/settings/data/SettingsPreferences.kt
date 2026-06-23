@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * DataStore 偏好设置管理器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.settings.data
 
 import android.content.Context

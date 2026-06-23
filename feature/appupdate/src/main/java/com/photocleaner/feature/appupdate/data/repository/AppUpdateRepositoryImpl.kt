@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 应用升级仓库实现
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.appupdate.data.repository
 
 import android.content.Context

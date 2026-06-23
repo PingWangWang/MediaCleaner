@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 设置页面 ViewModel
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.settings.ui
 
 import androidx.lifecycle.ViewModel

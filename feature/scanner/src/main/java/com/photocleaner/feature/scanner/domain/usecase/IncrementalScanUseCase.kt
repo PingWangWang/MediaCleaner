@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 增量扫描用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.domain.usecase
 
 import com.photocleaner.core.common.constant.AppConstants

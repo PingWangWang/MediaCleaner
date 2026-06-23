@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 更新设置项用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.settings.domain.usecase
 
 import com.photocleaner.feature.settings.data.SettingsPreferences

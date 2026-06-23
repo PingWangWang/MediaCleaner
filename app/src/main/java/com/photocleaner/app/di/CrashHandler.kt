@@ -1,13 +1,16 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 全局崩溃捕获处理器
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.di
 
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 
 /**
  * 全局未捕获异常处理器。

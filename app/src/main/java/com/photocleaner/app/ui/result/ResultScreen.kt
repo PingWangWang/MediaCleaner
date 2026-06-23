@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 去重结果页 Compose UI
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.ui.result
 
 import androidx.compose.animation.AnimatedVisibility

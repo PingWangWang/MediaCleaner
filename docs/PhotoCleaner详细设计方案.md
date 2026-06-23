@@ -56,7 +56,7 @@
 |UI 框架|Jetpack Compose \(Material 3\)|声明式UI，状态管理简洁，适配安卓现代开发趋势|
 |架构模式|MVVM \+ Clean Architecture \+ 多模块|高内聚低耦合，业务与UI分离，便于测试与迭代|
 |异步框架|Kotlin 协程 \+ Flow|官方推荐，线程切换轻量，背压处理优秀，适配流式流水线|
-|依赖注入|Hilt|谷歌官方，基于Dagger封装，上手成本低|
+|依赖注入|Hilt|谷歌官方，基于Dagger封装，上手成本低，常用注解：@Singleton / @HiltViewModel / @AssistedInject|
 |本地数据库|Room 2\.6\+|官方ORM，SQLite封装，与协程/Flow深度集成|
 |键值存储|Preferences DataStore|替代SharedPreferences，协程友好，支持类型安全|
 |图片加载|Coil 2\.5\+|Kotlin原生，协程友好，内存优化优秀|
@@ -129,7 +129,6 @@ app/src/main/
 │       ├── result/               # 去重结果页
 │       ├── detail/               # 图片详情页
 │       ├── recyclebin/           # 回收站页
-│       ├── update/               # 更新弹窗组件
 │       └── settings/             # 设置页
 ├── res/                          # 应用级资源
 │   ├── drawable/
@@ -155,10 +154,14 @@ core-common/src/main/
 │   │   ├── BitmapExt.kt
 │   │   ├── FileExt.kt
 │   │   └── ContextExt.kt
+│   ├── startup/                  # App Startup 初始化器
+│   │   └── Initializer.kt
 │   ├── utils/                    # 通用工具类
 │   │   ├── HashUtils.kt
 │   │   ├── SizeUtils.kt
-│   │   └── DateUtils.kt
+│   │   ├── DateUtils.kt
+│   │   ├── LoggingManager.kt         # 分级日志管理器
+│   │   └── DeviceClassifier.kt       # 设备性能分级器
 │   ├── constant/                 # 全局常量
 │   │   ├── MediaConstants.kt
 │   │   └── AppConstants.kt
@@ -177,11 +180,13 @@ core-database/src/main/
 │   │   ├── ImageItemEntity.kt
 │   │   ├── DuplicateGroupEntity.kt
 │   │   ├── GroupMemberEntity.kt
-│   │   └── RecycleItemEntity.kt
+│   │   ├── RecycleItemEntity.kt
+│   │   └── ScanCheckpointEntity.kt    # 扫描断点实体
 │   ├── dao/                      # 数据访问接口
 │   │   ├── ImageDao.kt
 │   │   ├── DuplicateGroupDao.kt
-│   │   └── RecycleDao.kt
+│   │   ├── RecycleDao.kt
+│   │   └── ScanCheckpointDao.kt       # 扫描断点DAO
 │   ├── converter/                # 类型转换器
 │   │   └── ListTypeConverter.kt
 │   └── AppDatabase.kt            # 数据库主类
@@ -205,6 +210,8 @@ feature-scanner/src/main/
 │   │   └── usecase/
 │   │       ├── ScanImageUseCase.kt
 │   │       └── IncrementalScanUseCase.kt
+│   ├── di/                        # 依赖注入模块
+│   │   └── ScannerModule.kt
 │   └── model/
 │       └── ScanProgress.kt
 └── AndroidManifest.xml
@@ -229,6 +236,8 @@ feature-duplicate/src/main/
 │   ├── domain/
 │   │   └── usecase/
 │   │       └── DetectDuplicateUseCase.kt
+│   ├── di/                        # 依赖注入模块
+│   │   └── DuplicateModule.kt
 │   └── base/
 │       └── DuplicateDetector.kt
 └── AndroidManifest.xml
@@ -248,8 +257,13 @@ feature-fileops/src/main/
 │   │       ├── DeleteImageUseCase.kt
 │   │       ├── RestoreImageUseCase.kt
 │   │       └── AutoClearRecycleUseCase.kt
-│   └── model/
+│   ├── di/                        # 依赖注入模块
+│   │   └── FileOpsModule.kt
+│   ├── model/
 │       └── DeleteResult.kt
+│   └── worker/     # WorkManager 后台任务
+│       ├── RecycleCleanupWorker.kt
+│       └── WorkScheduler.kt
 └── AndroidManifest.xml
 ```
 

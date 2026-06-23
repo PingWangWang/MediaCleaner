@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 删除图片用例
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.fileops.domain.usecase
 
 import com.photocleaner.core.common.model.ImageItem

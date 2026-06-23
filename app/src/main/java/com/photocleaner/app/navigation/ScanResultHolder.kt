@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 扫描结果共享单例，跨页面传递扫描数据
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.app.navigation
 
 import com.photocleaner.core.common.model.DuplicateGroup

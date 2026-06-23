@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * MediaStore 图片扫描数据源
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.data.datasource
 
 import android.content.ContentResolver

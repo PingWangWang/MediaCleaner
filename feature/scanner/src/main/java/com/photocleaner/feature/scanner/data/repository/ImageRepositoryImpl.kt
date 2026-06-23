@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 图片仓库实现，协调多数据源
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.data.repository
 
 import com.photocleaner.core.common.model.ImageItem

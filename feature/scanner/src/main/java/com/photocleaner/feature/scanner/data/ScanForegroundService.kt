@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2025 PhotoCleaner
+ *
+ * 扫描前台服务，保活扫描任务
+ *
+ * @author PhotoCleaner
+ */
 package com.photocleaner.feature.scanner.data
 
 import android.app.Notification
