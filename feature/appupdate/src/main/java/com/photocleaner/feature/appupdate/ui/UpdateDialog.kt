@@ -138,7 +138,7 @@ fun UpdateDialog(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 LinearProgressIndicator(
-                                    progress = { progressValue },
+                                    progress = progressValue,
                                     modifier = Modifier.fillMaxWidth(),
                                     color = MaterialTheme.colorScheme.primary,
                                     trackColor = MaterialTheme.colorScheme.surfaceVariant

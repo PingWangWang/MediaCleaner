@@ -3,7 +3,7 @@
 一键去重，释放存储空间。
 
 > 纯本地、轻量、高精度的安卓图片文件去重工具。  
-> **99 个 Kotlin 源文件 · 8 个模块 · MVVM + Clean Architecture**
+> **102 个 Kotlin 源文件 · 8 个模块 · MVVM + Clean Architecture**
 
 ---
 
@@ -344,9 +344,16 @@ cd PhotoCleaner
 # 调试构建
 ./gradlew assembleDebug
 
+# 离线构建（网络受限环境）
+./gradlew assembleDebug --offline
+
 # 发布构建（含 R8 混淆 + 资源压缩）
 ./gradlew assembleRelease
 ```
+
+> **网络受限环境**：若无法访问 `services.gradle.org`，可直接使用本地缓存的 Gradle 8.5
+> （位于 `~/.gradle/wrapper/dists/gradle-8.5-bin/`），或在 Android Studio 中
+> 设置 **File → Settings → Build → Gradle → Offline work**。
 
 ### 运行测试
 

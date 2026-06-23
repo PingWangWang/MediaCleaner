@@ -204,6 +204,7 @@ fun ResultScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DuplicateGroupCard(
     group: DuplicateGroup,

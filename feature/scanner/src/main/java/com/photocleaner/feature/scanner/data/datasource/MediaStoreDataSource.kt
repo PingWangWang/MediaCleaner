@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import com.photocleaner.core.common.constant.MediaConstants
 import com.photocleaner.core.common.model.ImageItem
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -24,7 +25,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class MediaStoreDataSource @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
 
     companion object {

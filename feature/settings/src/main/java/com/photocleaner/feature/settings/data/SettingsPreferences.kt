@@ -64,7 +64,7 @@ class SettingsPreferences @Inject constructor(
         const val THEME_MODE = "SYSTEM"
         const val LANGUAGE = "en"
         const val NOTIFICATION_ENABLED = true
-        const val LAST_SCAN_TIME: Long? = null
+        val LAST_SCAN_TIME: Long? = null
         const val SHAKE_TO_FEEDBACK = true
         const val PRIVACY_LOCK = false
         const val PRIVACY_POLICY_ACCEPTED = false

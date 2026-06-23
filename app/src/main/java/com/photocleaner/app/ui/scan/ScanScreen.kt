@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.photocleaner.core.common.model.DuplicateGroup
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
     viewModel: ScanViewModel = hiltViewModel(),
@@ -88,7 +89,7 @@ fun ScanScreen(
                             .alpha(pulseAlpha)
                     ) {
                         CircularProgressIndicator(
-                            progress = { state.progress },
+                            progress = state.progress,
                             modifier = Modifier.fillMaxSize(),
                             strokeWidth = 8.dp,
                             color = MaterialTheme.colorScheme.primary,
@@ -133,7 +134,7 @@ fun ScanScreen(
 
                 is ScanUiState.Complete -> {
                     CircularProgressIndicator(
-                        progress = { 1f },
+                        progress = 1f,
                         modifier = Modifier.size(80.dp),
                         strokeWidth = 6.dp,
                         color = MaterialTheme.colorScheme.primary

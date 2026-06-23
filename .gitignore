@@ -11,6 +11,12 @@ local.properties
 app/build/
 core/*/build/
 feature/*/build/
+*.apk
+*.aab
+*.ap_
+
+# ── Kotlin 编译器缓存 ──
+.kotlin/
 
 # ── NDK / 原生代码构建 ──
 .externalNativeBuild/
@@ -32,6 +38,9 @@ app-signature.gradle.kts
 
 # ── 日志文件 ──
 *.log
+
+# ── 内存堆转储 ──
+*.hprof
 
 # ── 操作系统文件 ──
 .DS_Store

@@ -86,7 +86,9 @@ data class ImageItemEntity(
 
     @ColumnInfo(name = "scan_time")
     val scanTime: Long
-)
+) {
+    companion object
+}
 
 /**
  * Converts this Room entity to the domain [ImageItem] model.

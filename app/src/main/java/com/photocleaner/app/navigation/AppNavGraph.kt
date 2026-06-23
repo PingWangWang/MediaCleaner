@@ -103,7 +103,6 @@ fun AppNavGraph() {
             // ---------- 结果页 ----------
             composable(NavRoutes.RESULT) {
                 ResultScreen(
-                    groups = ScanResultHolder.groups,
                     onItemClick = { groupId ->
                         // 找到被点击的分组，存入共享单例供详情页使用
                         ScanResultHolder.selectedGroup =
@@ -123,12 +122,7 @@ fun AppNavGraph() {
             ) { backStackEntry ->
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 DetailScreen(
-                    groupId = groupId,
-                    onBack = { navController.popBackStack() },
-                    onDelete = { imageIds ->
-                        // 后续可接入删除逻辑
-                        navController.popBackStack()
-                    }
+                    onBack = { navController.popBackStack() }
                 )
             }
 

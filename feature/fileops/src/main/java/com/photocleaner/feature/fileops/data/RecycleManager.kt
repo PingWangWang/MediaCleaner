@@ -35,6 +35,12 @@ class RecycleManager @Inject constructor(
 
         /** 回收站文件默认过期天数 */
         private val EXPIRE_DAYS: Long = AppConstants.RECYCLE_AUTO_CLEAR_DAYS.toLong()
+
+        /** 文件拷贝缓冲区大小：8 KB */
+        private const val DEFAULT_BUFFER_SIZE = 8192
+
+        /** 一天的毫秒数 */
+        private const val MILLIS_PER_DAY = 86_400_000L
     }
 
     /** 回收站目录的 File 句柄，按需惰性创建 */
@@ -175,13 +181,5 @@ class RecycleManager @Inject constructor(
         } else {
             target
         }
-    }
-
-    private companion object {
-        /** 文件拷贝缓冲区大小：8 KB */
-        private const val DEFAULT_BUFFER_SIZE = 8192
-
-        /** 一天的毫秒数 */
-        private const val MILLIS_PER_DAY = 86_400_000L
     }
 }

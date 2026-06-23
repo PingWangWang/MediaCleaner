@@ -2,8 +2,10 @@ package com.photocleaner.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Relation
 import androidx.room.Transaction
 import com.photocleaner.core.database.entity.DuplicateGroupEntity
 import com.photocleaner.core.database.entity.GroupMemberEntity
@@ -95,6 +97,10 @@ interface DuplicateGroupDao {
  * Relationship POJO that pairs a [DuplicateGroupEntity] with its [GroupMemberEntity] list.
  */
 data class GroupWithMembers(
-    val group: DuplicateGroupEntity,
+    @Embedded val group: DuplicateGroupEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "group_id"
+    )
     val members: List<GroupMemberEntity>
 )

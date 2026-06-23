@@ -1,4 +1,4 @@
-package com.photocleaner.core.common.utils
+package com.photocleaner.feature.fileops.worker
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker

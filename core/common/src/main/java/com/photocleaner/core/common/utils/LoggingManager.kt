@@ -35,6 +35,8 @@ class LoggingManager @Inject constructor() {
         @Volatile
         private var logDir: File? = null
 
+        enum class LogLevel { VERBOSE, DEBUG, INFO, WARN, ERROR }
+
         /**
          * 初始化日志系统。由 [com.photocleaner.core.common.startup.PhotoCleanerInitializer] 调用。
          */
@@ -43,44 +45,42 @@ class LoggingManager @Inject constructor() {
             logDir?.mkdirs()
             isDebug = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         }
-    }
 
-    enum class LogLevel { VERBOSE, DEBUG, INFO, WARN, ERROR }
+        fun v(tag: String, message: String) = log(LogLevel.VERBOSE, tag, message)
+        fun d(tag: String, message: String) = log(LogLevel.DEBUG, tag, message)
+        fun i(tag: String, message: String) = log(LogLevel.INFO, tag, message)
+        fun w(tag: String, message: String) = log(LogLevel.WARN, tag, message)
+        fun e(tag: String, message: String) = log(LogLevel.ERROR, tag, message)
 
-    fun v(tag: String, message: String) = log(LogLevel.VERBOSE, tag, message)
-    fun d(tag: String, message: String) = log(LogLevel.DEBUG, tag, message)
-    fun i(tag: String, message: String) = log(LogLevel.INFO, tag, message)
-    fun w(tag: String, message: String) = log(LogLevel.WARN, tag, message)
-    fun e(tag: String, message: String) = log(LogLevel.ERROR, tag, message)
-
-    private fun log(level: LogLevel, tag: String, message: String) {
-        // 控制台输出
-        if (isDebug || level >= LogLevel.ERROR) {
-            when (level) {
-                LogLevel.VERBOSE -> Log.v(tag, message)
-                LogLevel.DEBUG -> Log.d(tag, message)
-                LogLevel.INFO -> Log.i(tag, message)
-                LogLevel.WARN -> Log.w(tag, message)
-                LogLevel.ERROR -> Log.e(tag, message)
+        private fun log(level: LogLevel, tag: String, message: String) {
+            // 控制台输出
+            if (isDebug || level >= LogLevel.ERROR) {
+                when (level) {
+                    LogLevel.VERBOSE -> Log.v(tag, message)
+                    LogLevel.DEBUG -> Log.d(tag, message)
+                    LogLevel.INFO -> Log.i(tag, message)
+                    LogLevel.WARN -> Log.w(tag, message)
+                    LogLevel.ERROR -> Log.e(tag, message)
+                }
             }
+
+            // 文件输出（所有级别均写入文件）
+            logToFile(tag, level, message)
         }
 
-        // 文件输出（所有级别均写入文件）
-        logToFile(tag, level, message)
-    }
+        private fun logToFile(tag: String, level: LogLevel, message: String) {
+            val dir = logDir ?: return
+            val dateStr = SimpleDateFormat(FILE_NAME_FORMAT, Locale.getDefault()).format(Date())
+            val logFile = File(dir, "$dateStr.log")
 
-    private fun logToFile(tag: String, level: LogLevel, message: String) {
-        val dir = logDir ?: return
-        val dateStr = SimpleDateFormat(FILE_NAME_FORMAT, Locale.getDefault()).format(Date())
-        val logFile = File(dir, "$dateStr.log")
-
-        try {
-            FileWriter(logFile, true).use { writer ->
-                val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-                writer.write("$timeStr [${level.name}] [$tag] $message\n")
+            try {
+                FileWriter(logFile, true).use { writer ->
+                    val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                    writer.write("$timeStr [${level.name}] [$tag] $message\n")
+                }
+            } catch (_: Exception) {
+                // 日志写入失败不应影响主流程
             }
-        } catch (_: Exception) {
-            // 日志写入失败不应影响主流程
         }
     }
 

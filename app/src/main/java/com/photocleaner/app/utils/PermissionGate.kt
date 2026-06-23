@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.core.app.ActivityCompat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,7 +67,7 @@ fun PermissionGate(content: @Composable () -> Unit) {
             } else {
                 Manifest.permission.READ_EXTERNAL_STORAGE
             }
-            permanentlyDenied = !shouldShowRequestPermissionRationale(
+            permanentlyDenied = !ActivityCompat.shouldShowRequestPermissionRationale(
                 context as android.app.Activity,
                 permission
             )

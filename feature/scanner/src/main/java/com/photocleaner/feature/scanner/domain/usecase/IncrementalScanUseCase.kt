@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.photocleaner.core.common.utils.LoggingManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,7 +38,7 @@ class IncrementalScanUseCase @Inject constructor(
      * @return Flow 发射扫描进度状态
      */
     operator fun invoke(lastScanTime: Long): Flow<ScanProgress> = flow {
-        Timber.tag(TAG).d("Incremental scan started since: $lastScanTime")
+        LoggingManager.d(TAG, "Incremental scan started since: $lastScanTime")
 
         // 1. 发射 STARTED 状态
         emit(ScanProgress.STARTED)
@@ -55,7 +55,7 @@ class IncrementalScanUseCase @Inject constructor(
             }
 
             val totalCount = tempList.size
-            Timber.tag(TAG).d("New/modified images found: $totalCount")
+            LoggingManager.d(TAG, "New/modified images found: $totalCount")
 
             if (totalCount == 0) {
                 emit(ScanProgress.COMPLETED(totalCount = 0, newCount = 0))
@@ -93,11 +93,12 @@ class IncrementalScanUseCase @Inject constructor(
                 saveBatch(processedImages)
             }
 
-            Timber.tag(TAG).d("Incremental scan completed: $totalCount new images")
+            LoggingManager.d(TAG, "Incremental scan completed: $totalCount new images")
             emit(ScanProgress.COMPLETED(totalCount = totalCount, newCount = totalCount))
 
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Incremental scan failed after scanning $scannedCount images")
+            LoggingManager.e(TAG, "Incremental scan failed after scanning $scannedCount images: ${e.message}")
+            LoggingManager.e(TAG, e.stackTraceToString())
             emit(ScanProgress.ERROR(e.message ?: "Unknown error during incremental scan"))
         }
     }.flowOn(Dispatchers.Default)

@@ -6,6 +6,7 @@ import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import com.photocleaner.core.common.constant.MediaConstants
 import com.photocleaner.core.common.model.ImageItem
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -24,7 +25,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SafDataSource @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
 
     companion object {
@@ -106,8 +107,8 @@ class SafDataSource @Inject constructor(
                     )
 
                     // 尝试通过 OpenableColumns 获取更精确的信息
-                    val refinedName: String
-                    val refinedSize: Long
+                    var refinedName: String
+                    var refinedSize: Long
                     var refinedCursor: android.database.Cursor? = null
                     try {
                         refinedCursor = context.contentResolver.query(
