@@ -31,7 +31,7 @@ class LshClusterTest {
         val clusters = LshClusterAlgorithm.cluster(images, hashFunc)
         // Single item should still be in a cluster of size 1
         assertEquals(1, clusters.size)
-        assertEquals(1, clusters[0].size)
+        assertEquals(1, clusters[0].images.size)
     }
 
     @Test
@@ -44,7 +44,7 @@ class LshClusterTest {
         )
         val clusters = LshClusterAlgorithm.cluster(images, hashFunc)
         // All should fall into same cluster (same hash = same bucket in all bands)
-        val totalItems = clusters.sumOf { it.size }
+        val totalItems = clusters.sumOf { it.images.size }
         assertEquals(3, totalItems)
     }
 
@@ -64,7 +64,7 @@ class LshClusterTest {
         )
         val clusters = LshClusterAlgorithm.cluster(images, hashFunc, numBands = 4, numRows = 16)
         // With these parameters, at least some pairs should fall into different clusters
-        val totalItems = clusters.sumOf { it.size }
+        val totalItems = clusters.sumOf { it.images.size }
         assertEquals(3, totalItems)
     }
 
@@ -74,6 +74,7 @@ class LshClusterTest {
             uri = "content://test/$id",
             name = "img_$id.jpg",
             size = 1024,
+            modifyTime = System.currentTimeMillis(),
             dHash = dHash
         )
     }
