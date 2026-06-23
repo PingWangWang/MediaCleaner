@@ -53,43 +53,50 @@ class ScanViewModel @Inject constructor(
         viewModelScope.launch {
             _scanState.value = ScanUiState.Starting
 
-            // Phase 1: 全量扫描图片
-            scanImageUseCase().collect { progress ->
-                when (progress) {
-                    is ScanProgress.STARTED -> {
-                        _scanState.value = ScanUiState.Starting
-                    }
+            try {
+                // Phase 1: 全量扫描图片
+                scanImageUseCase().collect { progress ->
+                    when (progress) {
+                        is ScanProgress.STARTED -> {
+                            _scanState.value = ScanUiState.Starting
+                        }
 
-                    is ScanProgress.SCANNING -> {
-                        val p = if (progress.totalCount > 0) {
-                            progress.scannedCount.toFloat() / progress.totalCount.toFloat()
-                        } else 0f
-                        _scanState.value = ScanUiState.Scanning(
-                            progress = p.coerceIn(0f, 1f),
-                            phase = "正在扫描图片...",
-                            scannedCount = progress.scannedCount,
-                            totalCount = progress.totalCount,
-                            foundDuplicates = 0
-                        )
-                    }
+                        is ScanProgress.SCANNING -> {
+                            val p = if (progress.totalCount > 0) {
+                                progress.scannedCount.toFloat() / progress.totalCount.toFloat()
+                            } else 0f
+                            _scanState.value = ScanUiState.Scanning(
+                                progress = p.coerceIn(0f, 1f),
+                                phase = "正在扫描图片...",
+                                scannedCount = progress.scannedCount,
+                                totalCount = progress.totalCount,
+                                foundDuplicates = 0
+                            )
+                        }
 
-                    is ScanProgress.COMPLETED -> {
-                        _scanState.value = ScanUiState.Scanning(
-                            progress = 1f,
-                            phase = "正在检测重复图片...",
-                            scannedCount = progress.totalCount,
-                            totalCount = progress.totalCount,
-                            foundDuplicates = 0
-                        )
-                    }
+                        is ScanProgress.COMPLETED -> {
+                            _scanState.value = ScanUiState.Scanning(
+                                progress = 1f,
+                                phase = "正在检测重复图片...",
+                                scannedCount = progress.totalCount,
+                                totalCount = progress.totalCount,
+                                foundDuplicates = 0
+                            )
+                        }
 
-                    is ScanProgress.ERROR -> {
-                        _scanState.value = ScanUiState.Error(
-                            progress.message
-                        )
-                        return@collect
+                        is ScanProgress.ERROR -> {
+                            _scanState.value = ScanUiState.Error(
+                                progress.message
+                            )
+                            return@collect
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                _scanState.value = ScanUiState.Error(
+                    "扫描过程异常：${e.localizedMessage ?: "未知错误"}"
+                )
+                return@launch
             }
 
             // Phase 2: 从数据库加载所有图片

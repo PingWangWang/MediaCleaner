@@ -24,9 +24,7 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onStartScan: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenRecycleBin: () -> Unit
+    onStartScan: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -101,37 +99,6 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Secondary action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onOpenRecycleBin,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("回收站")
-                }
-
-                OutlinedButton(
-                    onClick = onOpenSettings,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("设置")
-                }
-            }
-
             Spacer(modifier = Modifier.weight(1f))
 
             // Storage info at bottom

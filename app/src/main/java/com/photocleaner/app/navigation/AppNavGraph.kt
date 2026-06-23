@@ -86,9 +86,7 @@ fun AppNavGraph() {
             // ---------- 主页 ----------
             composable(NavRoutes.HOME) {
                 HomeScreen(
-                    onStartScan = { navController.navigate(NavRoutes.SCAN) },
-                    onOpenSettings = { navController.navigate(NavRoutes.SETTINGS) },
-                    onOpenRecycleBin = { navController.navigate(NavRoutes.RECYCLE_BIN) }
+                    onStartScan = { navController.navigate(NavRoutes.SCAN) }
                 )
             }
 

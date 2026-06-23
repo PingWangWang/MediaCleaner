@@ -83,7 +83,10 @@ fun ScanScreen(
                 }
 
                 is ScanUiState.Starting -> {
-                    CircularProgressIndicator(modifier = Modifier.size(80.dp))
+                    CircularProgressIndicator(
+                        progress = 0f,
+                        modifier = Modifier.size(80.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("正在准备扫描...", fontSize = 16.sp)
                 }
