@@ -50,15 +50,35 @@ fun HomeScreen(
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             when (val s = state) {
-                is HomeUiState.Idle -> IdleContent(onStartScan = { viewModel.startScan() })
+                is HomeUiState.Idle -> IdleContent(
+                    lastScan = s.lastScan,
+                    onStartScan = { viewModel.startScan() }
+                )
                 is HomeUiState.Starting -> CircularProgressIndicator(progress = 0f)
                 is HomeUiState.Scanning -> ScanningContent(s, pulseAlpha.value)
-                is HomeUiState.ScanCompleted -> ScanCompletedContent(s.totalCount) { viewModel.startDetection() }
-                is HomeUiState.Detecting -> DetectingContent(s)
-                is HomeUiState.Complete -> CompleteContent(s.groups, selectedIds, viewModel, scope, snackbarHostState)
+                is HomeUiState.ScanCompleted -> ScanCompletedContent(
+                    totalCount = s.totalCount,
+                    onStartDetection = { viewModel.startDetection() },
+                    onGoHome = { viewModel.goHome() }
+                )
+                is HomeUiState.Detecting -> DetectingContent(
+                    s,
+                    onPause = { viewModel.pauseDetection() },
+                    onResume = { viewModel.resumeDetection() },
+                    onCancel = { viewModel.cancelDetection() }
+                )
+                is HomeUiState.Complete -> CompleteContent(
+                    groups = s.groups,
+                    selectedIds = selectedIds,
+                    viewModel = viewModel,
+                    scope = scope,
+                    snackbarHostState = snackbarHostState,
+                    onGoHome = { viewModel.goHome() }
+                )
                 is HomeUiState.Error -> ErrorContent(s.message) { viewModel.startScan() }
             }
         }
@@ -88,8 +108,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun IdleContent(onStartScan: () -> Unit) {
-    Spacer(Modifier.height(48.dp))
+private fun IdleContent(lastScan: ScanRecord?, onStartScan: () -> Unit) {
     Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
     Spacer(Modifier.height(16.dp))
     Text("一键去重，释放存储空间", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -104,7 +123,21 @@ private fun IdleContent(onStartScan: () -> Unit) {
         Column(Modifier.padding(16.dp)) {
             Text("上次扫描", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
-            Text("暂无扫描记录", style = MaterialTheme.typography.bodyMedium)
+            if (lastScan != null) {
+                val date = java.text.SimpleDateFormat("MM/dd HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(lastScan.timestamp))
+                Text("扫描了 ${lastScan.totalImages} 张图片", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (lastScan.duplicateGroups > 0) "发现 ${lastScan.duplicateGroups} 组重复"
+                           else "未发现重复图片",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (lastScan.duplicateGroups > 0) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Text("暂无扫描记录", style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
@@ -121,56 +154,101 @@ private fun ScanningContent(s: HomeUiState.Scanning, pulseAlpha: Float) {
 }
 
 @Composable
-private fun ScanCompletedContent(totalCount: Int, onStartDetection: () -> Unit) {
-    Spacer(Modifier.height(32.dp))
+private fun ScanCompletedContent(totalCount: Int, onStartDetection: () -> Unit, onGoHome: () -> Unit) {
     Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
     Spacer(Modifier.height(16.dp))
     Text("扫描完成", fontSize = 20.sp, fontWeight = FontWeight.Bold)
     Text("共扫描 $totalCount 张图片", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(24.dp))
     Button(onClick = onStartDetection, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("开始检测重复图片", fontSize = 16.sp) }
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(onClick = onGoHome, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("返回首页", fontSize = 16.sp) }
 }
 
 @Composable
-private fun DetectingContent(s: HomeUiState.Detecting) {
-    CircularProgressIndicator(progress = 0f, modifier = Modifier.size(80.dp))
+private fun DetectingContent(
+    s: HomeUiState.Detecting,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onCancel: () -> Unit
+) {
+    if (!s.paused) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
+            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+        }
+    } else {
+        Icon(
+            Icons.Default.PauseCircle,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
     Spacer(Modifier.height(16.dp))
-    Text("正在检测重复图片...", fontSize = 18.sp)
+    Text(
+        text = if (s.paused) "检测已暂停" else "正在检测重复图片...",
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Medium
+    )
     Text("已发现 ${s.foundGroups} 组重复", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+    Spacer(Modifier.height(24.dp))
+    Button(
+        onClick = if (s.paused) onResume else onPause,
+        modifier = Modifier.fillMaxWidth().height(48.dp)
+    ) {
+        Text(if (s.paused) "继续检测" else "暂停检测", fontSize = 16.sp)
+    }
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(
+        onClick = onCancel,
+        modifier = Modifier.fillMaxWidth().height(48.dp)
+    ) {
+        Text("结束检测", fontSize = 16.sp)
+    }
 }
 
 @Composable
 private fun CompleteContent(groups: List<DuplicateGroup>, selectedIds: Set<Long>, viewModel: HomeViewModel,
-                            scope: kotlinx.coroutines.CoroutineScope, snackbarHostState: SnackbarHostState) {
+                            scope: kotlinx.coroutines.CoroutineScope, snackbarHostState: SnackbarHostState,
+                            onGoHome: () -> Unit) {
     if (groups.isEmpty()) {
-        Text("未发现重复图片", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text("您的相册很干净", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Text("未发现重复图片", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("您的相册很干净", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         return
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("发现 ${groups.size} 组重复图片", fontWeight = FontWeight.Bold)
-        TextButton(onClick = {
-            if (selectedIds.size < groups.size) viewModel.selectAll() else viewModel.clearSelection()
-        }) { Text(if (selectedIds.size < groups.size) "全选" else "取消全选") }
-    }
-    LazyColumn(Modifier.fillMaxSize()) {
-        items(groups) { group ->
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (group.groupId in selectedIds)
-                        MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = group.groupId in selectedIds,
-                        onCheckedChange = { viewModel.toggleGroupSelection(group.groupId) }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("发现 ${groups.size} 组重复图片", fontWeight = FontWeight.Bold)
+            TextButton(onClick = {
+                if (selectedIds.size < groups.size) viewModel.selectAll() else viewModel.clearSelection()
+            }) { Text(if (selectedIds.size < groups.size) "全选" else "取消全选") }
+        }
+        OutlinedButton(
+            onClick = onGoHome,
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) { Text("返回首页", fontSize = 16.sp) }
+        Spacer(Modifier.height(8.dp))
+        LazyColumn(Modifier.weight(1f)) {
+            items(groups) { group ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (group.groupId in selectedIds)
+                            MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                     )
-                    Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                        Text("相似度: ${(group.similarity * 100).toInt()}%", fontWeight = FontWeight.Medium)
-                        Text("${group.images.size} 张图片 · ${formatSize(group.size)}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) {
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = group.groupId in selectedIds,
+                            onCheckedChange = { viewModel.toggleGroupSelection(group.groupId) }
+                        )
+                        Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                            Text("相似度: ${(group.similarity * 100).toInt()}%", fontWeight = FontWeight.Medium)
+                            Text("${group.images.size} 张图片 · ${formatSize(group.size)}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }

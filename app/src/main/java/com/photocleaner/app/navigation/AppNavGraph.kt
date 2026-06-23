@@ -10,6 +10,7 @@ package com.photocleaner.app.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.calculateBottomPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -105,12 +106,12 @@ fun AppNavGraph(
             } else {
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
                     userScrollEnabled = true
                 ) { page ->
                     when (page) {
                         0 -> HomeScreen()
-                        1 -> RecycleBinScreen(onBack = { scope.launch { pagerState.animateScrollToPage(0) } })
+                        1 -> RecycleBinScreen()
                         2 -> SettingsScreen(onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
                     }
                 }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Restore
@@ -30,8 +29,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecycleBinScreen(
-    viewModel: RecycleBinViewModel = hiltViewModel(),
-    onBack: () -> Unit
+    viewModel: RecycleBinViewModel = hiltViewModel()
 ) {
     val items by viewModel.items.collectAsState()
     val itemCount by viewModel.itemCount.collectAsState()
@@ -111,11 +109,7 @@ fun RecycleBinScreen(
                         }
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
+
                 actions = {
                     if (itemCount > 0) {
                         IconButton(onClick = { showClearAllConfirm = true }) {
